@@ -1,0 +1,97 @@
+Program Description
+===================
+Fri May 25 11:06:28 MEST 2001
+ 
+Overview of all Programs
+------------------------
+
+qspim_cb         - QSPIM example for callback mode
+qspim_sig        - QSPIM example
+qspim_a4n        - QSPIM example using A4N
+qspim_cb         - QSPIM example for callback mode
+
+Program qspim_cb
+----------------
+
+Usage:
+   qspim_cb <device>
+
+Function:
+   QSPIM example for callback mode
+
+Options:
+   device       device name   
+   
+Description:
+   Example program for the QSPIM driver   
+   Uses the callback mode.   
+   
+   !!!! RUNS ONLY UNDER OS-9000 !!!!   
+   !!!! Compile with -r option (no stack checking) !!!!   
+   !!!! Compile with -be=pg option (set const pointer) !!!!   
+   
+Program qspim_sig
+-----------------
+
+Usage:
+   qspim_sig <device>
+
+Function:
+   QSPIM example
+
+Options:
+   device       device name   
+   
+Description:
+   Example program for the QSPIM driver   
+   Uses the signal mode   
+   
+Program qspim_a4n
+-----------------
+
+Usage:
+   qspim_a4n <device>
+
+Function:
+   QSPIM example using A4N
+
+Options:
+   device       device name   
+   
+Description:
+   Example program for the QSPIM driver   
+   To be used with A4N card and special connection.   
+   
+   SCLK -> A4N IC45.2     100R series resistor   
+   MOSI -> A4N IC45.3     100R series resistor   
+   MISO -> A4N M-Mod0 C16 100R series resistor   
+   PCS0 -> A4N IC44.6     100R series resistor   
+   
+   A4N QSPI setup:   
+   FFFC16: 7b71   
+   FFFC18: 0100   
+   FFFC1C: 4F00   
+   FFFC1A: 8000   
+   
+   D FFFD00 to view data   
+   
+Program qspim_cb
+----------------
+
+Usage:
+   qspim_cb <device>
+
+Function:
+   QSPIM example for callback mode
+
+Options:
+   device       device name   
+   
+Description:
+   Example program for the QSPIM driver   
+   Uses the callback mode.   
+   
+   !!!! RUNS ONLY UNDER OS-9000 !!!!   
+   !!!! Compile with -r option (no stack checking) !!!!   
+   !!!! Compile with -be=pg option (set const pointer) !!!!   
+   

@@ -1,0 +1,581 @@
+<html>
+<head>
+<title>QSPIM driver</title>
+<style type=text/css>
+    Body { background-color: #ffffff; }
+    A:link { color: #c50038; }
+    A:hover { color: #28669b; }
+    P, H1, H2, H3, H3, H5, LI {
+        color: #434343;
+        font-family: Arial, Helvetica, Univers;
+    }
+    P, LI { font-size: 9.000000pt; }
+</style>
+</head>
+<body>
+<h1>QSPIM driver</h1>
+<p>Fri May 25 11:06:27 MEST 2001</p>
+<h2>Overview of all Chapters</h2>
+<a href="#chapt0">Chapter: Low-level driver for QSPI interface Mahr project</a><br>
+<a href="#chapt1">Chapter: Functions for 8240 DMA</a><br>
+
+<h2>Overview of all Functions</h2>
+<a name="chapt0"><a href="#intro0"><h3>Low-level driver for QSPI interface Mahr project</h3></a>
+<TABLE border=1>
+<TR><TD><P><B>Function</B></P></TD><TD><P><B>Description</B></P></TD></TR>
+
+<TR><TD><P><a href="#QSPIM_GetEntry">QSPIM_GetEntry</a></P></TD><TD><P>Initialize driver's jump table </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_Init">QSPIM_Init</a></P></TD><TD><P>Allocate and return low-level handle, initialize hardware </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_Exit">QSPIM_Exit</a></P></TD><TD><P>De-initialize hardware and clean up memory </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_Read">QSPIM_Read</a></P></TD><TD><P>Not supported for QSPIM driver </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_Write">QSPIM_Write</a></P></TD><TD><P>Not supported for QSPIM driver </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_SetStat">QSPIM_SetStat</a></P></TD><TD><P>Set the driver status </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_GetStat">QSPIM_GetStat</a></P></TD><TD><P>Get the driver status </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_BlockRead">QSPIM_BlockRead</a></P></TD><TD><P>Read QSPI frame from driver receive fifo </P></TD></TR>
+<TR><TD><P><a href="#DirectWriteFunc">DirectWriteFunc</a></P></TD><TD><P>Entry point for application when bypassing MDIS </P></TD></TR>
+<TR><TD><P><a href="#DirectISetstat">DirectISetstat</a></P></TD><TD><P>Set the driver status from an user interrupt routine </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_BlockWrite">QSPIM_BlockWrite</a></P></TD><TD><P>Write QSPI frame into driver internal buffer </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_Irq">QSPIM_Irq</a></P></TD><TD><P>Interrupt service routine </P></TD></TR>
+<TR><TD><P><a href="#QSPIM_Info">QSPIM_Info</a></P></TD><TD><P>Get information about hardware and driver requirements </P></TD></TR>
+</TABLE>
+<a name="chapt1"><a href="#intro1"><h3>
+Functions for 8240 DMA</h3></a>
+<TABLE border=1>
+<TR><TD><P><B>Function</B></P></TD><TD><P><B>Description</B></P></TD></TR>
+
+<TR><TD><P><a href="#DMA_Init">DMA_Init</a></P></TD><TD><P>Init 8240 DMA </P></TD></TR>
+<TR><TD><P><a href="#DMA_Transfer">DMA_Transfer</a></P></TD><TD><P>Perform DMA transfer </P></TD></TR>
+</TABLE>
+ 
+<a name="intro0"><h1>Low-level driver for QSPI interface Mahr project </h1></a>
+<pre>
+Required: OSS, DESC, DBG, ID libraries 
+Switches: _ONE_NAMESPACE_PER_DRIVER_
+          QSPIM_USE_DMA - use 8240 DMA. Works only on 8240 Map B boards
+          QSPIM_D201_SW - D201 in swapped mode
+
+Specification: 13Z010-06_S4.doc
+
+</pre>
+<a name="QSPIM_GetEntry"><h2>Function QSPIM_GetEntry()</h2></a>
+
+<h3>Syntax</h3>
+<pre>#ifdef _ONE_NAMESPACE_PER_DRIVER_
+    extern void LL_GetEntry( LL_ENTRY* drvP )
+#else
+    extern void __QSPIM_GetEntry( LL_ENTRY* drvP )
+#endif
+</pre><h3>Description</h3>
+<pre>Initialize driver's jump table
+
+</pre><h3>Input</h3>
+<pre>---
+</pre><h3>Output</h3>
+<pre>drvP  pointer to the initialized jump table structure
+</pre>
+<a name="QSPIM_Init"><h2>Function QSPIM_Init()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_Init(
+    DESC_SPEC       *descP,
+    OSS_HANDLE      *osHdl,
+    MACCESS         *ma,
+    OSS_SEM_HANDLE  *devSemHdl,
+    OSS_IRQ_HANDLE  *irqHdl,
+    LL_HANDLE       **hP
+)
+</pre><h3>Description</h3>
+<pre>Allocate and return low-level handle, initialize hardware
+
+The function 
+- scans the descriptor
+- loads the loadable PLD
+- initializes the registers
+
+After QSPM_Init the timer/QSPI is stopped and must be started with 
+TIMER_STATE setstat
+
+Descriptor key        Default          Range/Unit
+--------------------  ---------------  -------------
+DEBUG_LEVEL_DESC      OSS_DBG_DEFAULT  see dbg.h
+DEBUG_LEVEL           OSS_DBG_DEFAULT  see dbg.h
+PLD_LOAD              1                0..1
+PLD_CLOCK             33333333         [Hz]
+QSPI_QUEUE_LEN        256              16..256 [words]
+WOMQ                  0                0/1
+BITS                  16               8..16
+CPOL                  0                0/1
+CPHA                  0                0/1
+BAUD                  4000000          [Hz]
+DSCLK                 2000             [ns]
+DTL                   1000             [ns]
+PCS_DEFSTATE          0                0x0..0xf
+TIMER_CYCLE_TIME      500000           [ns] 
+RCV_FIFO_DEPTH        10               2..n
+
+PLD_LOAD: determines if PLD will be loaded 
+PLD_CLOCK: clock rate of PLD in Hz
+QSPI_QUEUE_LEN: 64 for D201 prototype, 256 for A12
+
+other codes: see corresponding setstats
+</pre><h3>Input</h3>
+<pre>descSpec   pointer to descriptor data
+osHdl      oss handle
+ma         D201 variant:  ma[0] hw access handle for Plx
+                          ma[1] hw access handle for QSPI
+ma         STD variant:   ma[0] hw access handle for QSPI
+devSemHdl  device semaphore handle
+irqHdl     irq handle
+</pre><h3>Output</h3>
+<pre>hP         pointer to low-level driver handle
+return     success (0) or error code
+</pre>
+<a name="QSPIM_Exit"><h2>Function QSPIM_Exit()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_Exit(
+   LL_HANDLE    **hP
+)
+</pre><h3>Description</h3>
+<pre>De-initialize hardware and clean up memory
+
+The interrupt is disabled.
+
+</pre><h3>Input</h3>
+<pre>hP    pointer to low-level driver handle
+</pre><h3>Output</h3>
+<pre>return    success (0) or error code
+</pre>
+<a name="QSPIM_Read"><h2>Function QSPIM_Read()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_Read(
+    LL_HANDLE *h,
+    int32 ch,
+    int32 *valueP
+)
+</pre><h3>Description</h3>
+<pre>Not supported for QSPIM driver
+
+</pre><h3>Input</h3>
+<pre>h    low-level handle
+ch       current channel
+</pre><h3>Output</h3>
+<pre>valueP   read value
+return   success (0) or error code
+</pre>
+<a name="QSPIM_Write"><h2>Function QSPIM_Write()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_Write(
+    LL_HANDLE *h,
+    int32 ch,
+    int32 value
+)
+</pre><h3>Description</h3>
+<pre>Not supported for QSPIM driver
+
+</pre><h3>Input</h3>
+<pre>h    low-level handle
+ch       current channel
+value    value to write 
+</pre><h3>Output</h3>
+<pre>return   success (0) or error code
+</pre>
+<a name="QSPIM_SetStat"><h2>Function QSPIM_SetStat()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_SetStat(
+    LL_HANDLE *h,
+    int32  code,
+    int32  ch,
+    INT32_OR_64 value32_or_64
+)
+</pre><h3>Description</h3>
+<pre>Set the driver status
+
+The following status codes are supported:
+
+ACTION CODES:
+
+Code                 Description                     Values
+-------------------  ------------------------------  ----------
+QSPIM_TIMER_STATE    start/stop cycle timer          0/1
+QSPIM_FRM_SIG_SET    install signal for QSPI frame   signal code
+QSPIM_FRM_SIG_CLR    remove signal for QSPI frame    don't care
+QSPIM_EMG_SIG_SET    install signal for emergency    signal code
+QSPIM_EMG_SIG_CLR    remove signal for emergency     don't care
+QSPIM_CLR_RCV_FIFO   clear receive fifo              don't care
+QSPIM_BLK_CALLBACK   install/remove callback func    see below
+QPSIM_FRAMESYN       activate/deactive FRAMESYN pin  0/1
+
+CONFIGURATION CODES:
+
+Code                 Description                     Values
+-------------------  ------------------------------  ----------
+QSPIM_WOMQ           wired OR for QSPI pins          0/1
+QSPIM_BITS           bits per word                   8..16
+QSPIM_CPOL           clock polarity                  0/1
+QSPIM_CPHA           clock phase                     0/1
+QSPIM_BAUD           SCLK baudrate                   [Hz]
+QSPIM_DSCLK          PCS to SCLK delay               [ns]
+QSPIM_DTL            delay after transfer            [ns]
+QSPIM_PCS_DEFSTATE   default state of PCS3..0        0x0..0xf
+QSPIM_TIMER_LO_TIME  low time of cycle timer         [ns]
+QSPIM_TIMER_HI_TIME  high time of cycle timer        [ns]
+QSPIM_RCV_FIFO_DEPTH number of queue entries in fifo 2..n  
+QSPIM_BLK_DEFINE_FRM defines the frame structure     see below
+M_LL_DEBUG_LEVEL     driver debug level              see dbg.h
+M_MK_IRQ_ENABLE      interrupt enable                0..1
+M_LL_IRQ_COUNT       interrupt counter               0..max
+
+QSPIM_TIMER_STATE: A value of 1 starts the cycle timer and therefore
+    QSPI transmission. A value of 0 stops it.
+
+QSPIM_FRM_SIG_SET: Installs a signal that is sent whenever a QSPI frame
+    has been transmitted. QSPIM_FRM_SIG_CLR removes this signal.
+
+QSPIM_EMG_SIG_CLR: Installs a signal that is sent whenever a transmit
+    buffer underrun occurs. QSPIM_EMG_SIG_CLR removes this signal.
+
+QSPIM_CLR_RCV_FIFO: discards all entries in the receive fifo.
+
+QSPIM_WOMQ, QSPIM_BITS, QSPIM_CPOL, QSPIM_CPHA, QSPIM_BAUD, QSPIM_DSCLK,
+QSPIM_DTL: same meaning as the corresponding fields in the 68332 QSPI.
+
+QSPIM_PCS_DEFSTATE: defines the state of the PCS3..0 pins when no 
+transmission is pending.
+
+QSPIM_TIMER_CYCLE_TIME: define cycle time of both high/low phase 
+    (together) of the cycle clock. A value of 500000 will result in
+    250us low and 250us high time
+    N.B. No effect in the D201 QSPI implementation!
+    Timer cycle fixed to 250us low/250 us high time.
+
+QSPIM_RCV_FIFO_DEPTH: reallocates memory for the receive fifo. 
+    Implicitely clears all pending entries
+
+QSPIM_BLK_DEFINE_FRM: Defines the structure of the QSPI frame that 
+    is sent once per cycle. Block setstat. blk-&#62;data must be an array 
+    of 16 bit words. Each word is defined as follows:
+
+    Bit 15    14    13    12     11    10    9     8       7 .. 0
+    --------------------------------------------------------------
+        CONT  BITSE DT    DSCLK  PCS3  PCS2  PCS1  PCS0    NWORDS
+
+    CONT:  like in QSPI command ram, only affects last word of slave
+    BITSE: like in QSPI command ram, affects all words of slave
+    DT:    like in QSPI command ram, affects all words of slave
+    DSCLK: like in QSPI command ram, only affects first words of slave
+    PCS3..0: state of chip select pins during transmission
+    NWORDS:  number of QSPI words to transfer to/from slave
+
+QSPIM_BLK_CALLBACK: Can be used to install or remove a callback routine
+    within the application that is called whenever a QSPI frame has
+    been transferred. The &#60;data&#62; element of the M_SG_BLOCK structure
+    must point to a QSPIM_CALLBACK_PARMS structure.
+    If the QSPIM_CALLBACK_PARMS.func is zero, the callback is removed.
+
+QSPIM_FRAMESYN: Controls the value of the FRAMESYN signal. The passed
+    value is output on the next falling edge of the cycle timer.
+</pre><h3>Input</h3>
+<pre>h          low-level handle
+code       status code
+ch         current channel
+value      data or
+           pointer to block data structure (M_SG_BLOCK)  (*)
+(*) = for block status codes
+</pre><h3>Output</h3>
+<pre>return     success (0) or error code
+</pre>
+<a name="QSPIM_GetStat"><h2>Function QSPIM_GetStat()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_GetStat(
+    LL_HANDLE *h,
+    int32  code,
+    int32  ch,
+    INT32_OR_64 *value32_or_64P
+)
+</pre><h3>Description</h3>
+<pre>Get the driver status
+
+The following status codes are supported:
+
+Code                 Description                     Values
+-------------------  ------------------------------  ----------
+QSPIM_TIMER_STATE    get state of timer QSPI         0/1
+QSPIM_RCV_FIFO_COUNT number of frames in rcv fifo    
+QSPIM_ERRORS         get/reset errors                QSPIM_ERR_xxx
+QSPIM_WOMQ           wired OR for QSPI pins          0/1
+QSPIM_BITS           bits per word                   8..16
+QSPIM_CPOL           clock polarity                  0/1
+QSPIM_CPHA           clock phase                     0/1
+QSPIM_BAUD           SCLK baudrate                   [Hz]
+QSPIM_DSCLK          PCS to SCLK delay               [ns]
+QSPIM_DTL            delay after transfer            [ns]
+QSPIM_PCS_DEFSTATE   default state of PCS3..0        0x0..0xf
+QSPIM_TIMER_CYCLE_TIME cycle time                    [ns]
+QSPIM_RCV_FIFO_DEPTH number of queue entries in fifo 2..n  
+QSPIM_BLK_DIRECT_WRITE_FUNC determine write func ptr see below
+QSPIM_BLK_DIRECT_ISETSTAT_FUNC determine setstat func ptr see below
+
+M_LL_DEBUG_LEVEL     driver debug level              see dbg.h
+M_LL_CH_NUMBER       number of channels              1
+M_LL_CH_DIR          direction of curr. chan.        M_CH_BINARY
+M_LL_CH_LEN          length of curr. ch. [bits]      16
+M_LL_CH_TYP          description of curr. chan.      M_CH_INOUT
+M_LL_IRQ_COUNT       interrupt counter               0..max
+M_MK_BLK_REV_ID      ident function table ptr        -
+
+QSPIM_TIMER_STATE: gets the current state of cycle timer/QPSI. 0 means
+    stopped, 1 means running.
+
+QSPIM_RCV_FIFO_COUNT: get the number of frames in rcv fifo
+
+QSPIM_ERRORS: reads the error flags and clears the internal error flags.
+    return value is a ORed combination of QSPIM_ERR_xxx flags.
+
+QSPIM_BLK_DIRECT_WRITE_FUNC: Used to get entry point and argument for
+    the direct write func. The &#60;data&#62; element of the M_SG_BLOCK structure
+    must point to a QSPIM_DIRECT_WRITE_PARMS structure that is filled
+    by that call.
+
+QSPIM_BLK_DIRECT_ISETSTAT_FUNC: Used to get entry point and argument for
+    the setstat function that can be called by user interrupt service
+    routines. The &#60;data&#62; element of the M_SG_BLOCK structure
+    must point to a QSPIM_DIRECT_ISETSTAT_PARMS structure that is filled
+    by that call.
+
+Rest of getstats correspond to the setstats with the same name
+</pre><h3>Input</h3>
+<pre>h          low-level handle
+code       status code
+ch         current channel
+valueP     pointer to block data structure (M_SG_BLOCK)  (*) 
+(*) = for block status codes
+</pre><h3>Output</h3>
+<pre>valueP     data ptr or
+           pointer to block data structure (M_SG_BLOCK)  (*) 
+return     success (0) or error code
+(*) = for block status codes
+</pre>
+<a name="QSPIM_BlockRead"><h2>Function QSPIM_BlockRead()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_BlockRead(
+     LL_HANDLE *h,
+     int32     ch,
+     void      *buf,
+     int32     size,
+     int32     *nbrRdBytesP
+)
+</pre><h3>Description</h3>
+<pre>Read QSPI frame from driver receive fifo
+
+Always non blocking. If no frame present in receive fifo, returns without
+error and number of read bytes is zero.
+
+&#60;buf&#62; will have the same format as the QSPI receive RAM
+
+Returns ERR_LL_READ if the fifo has overflowed. In this case, application
+must call Getstat QSPIM_ERRORS to clear the error.
+
+</pre><h3>Input</h3>
+<pre>h            low-level handle
+ch           current channel
+buf          data buffer
+size         data buffer size
+</pre><h3>Output</h3>
+<pre>nbrRdBytesP  number of read bytes
+return       success (0) or error code
+             ERR_LL_READ: fifo overrun occurred
+             ERR_LL_USERBUF: user buffer too small for frm
+</pre>
+<a name="DirectWriteFunc"><h2>Function DirectWriteFunc()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 DirectWriteFunc(
+    void *arg,
+    u_int16 *qspiFrame, 
+    u_int32 qspiFrameLen)
+</pre><h3>Description</h3>
+<pre>Entry point for application when bypassing MDIS
+
+</pre><h3>Input</h3>
+<pre>arg            the LL handle
+qspiFrame      ptr to data to be sent
+qspiFrameLen   number of bytes in qspiFrame
+</pre><h3>Output</h3>
+<pre>returns        error code
+</pre>
+<a name="DirectISetstat"><h2>Function DirectISetstat()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 DirectISetstat(
+    void   *arg,
+    int32  code,
+    int32  ch,
+    int32  value
+)
+</pre><h3>Description</h3>
+<pre>Set the driver status from an user interrupt routine
+
+The following status codes are supported:
+
+ACTION CODES:
+
+Code                 Description                     Values
+-------------------  ------------------------------  ----------
+QPSIM_FRAMESYN       activate/deactive FRAMESYN pin  0/1
+
+QSPIM_FRAMESYN: Controls the value of the FRAMESYN signal. The passed
+    value is output on the next falling edge of the cycle timer.
+</pre><h3>Input</h3>
+<pre>arg            the LL handle
+qspiFrame      ptr to data to be sent
+qspiFrameLen   number of bytes in qspiFrame
+</pre><h3>Output</h3>
+<pre>returns        error code
+</pre>
+<a name="QSPIM_BlockWrite"><h2>Function QSPIM_BlockWrite()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_BlockWrite(
+     LL_HANDLE *h,
+     int32     ch,
+     void      *buf,
+     int32     size,
+     int32     *nbrWrBytesP
+)
+</pre><h3>Description</h3>
+<pre>Write QSPI frame into driver internal buffer
+
+Always non blocking.
+
+The buffered frame will then be transferred to the QSPI slaves in the
+next cycle.
+
+&#60;buf&#62; must have the same format as the QSPI transmit RAM.
+&#60;size&#62; must have exactly the number of bytes of the QSPI frame
+</pre><h3>Input</h3>
+<pre>h            low-level handle
+ch           current channel (ignored)
+buf          data buffer
+size         data buffer size (bytes)
+</pre><h3>Output</h3>
+<pre>nbrWrBytesP  number of written bytes
+return       success (0) or error code
+             ERR_LL_WRITE:
+             ERR_LL_USERBUF: buffer size didn't match
+</pre>
+<a name="QSPIM_Irq"><h2>Function QSPIM_Irq()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_Irq(
+   LL_HANDLE *h
+)
+</pre><h3>Description</h3>
+<pre>Interrupt service routine
+
+The interrupt is triggered when a timer interrupt or
+a QSPI interrupt occurs
+
+If the driver can detect the interrupt's cause it returns
+LL_IRQ_DEVICE or LL_IRQ_DEV_NOT, otherwise LL_IRQ_UNKNOWN.
+
+</pre><h3>Input</h3>
+<pre>h        low-level handle
+</pre><h3>Output</h3>
+<pre>return   LL_IRQ_DEVICE    irq caused by device
+         LL_IRQ_DEV_NOT   irq not caused by device
+         LL_IRQ_UNKNOWN   unknown
+</pre>
+<a name="QSPIM_Info"><h2>Function QSPIM_Info()</h2></a>
+
+<h3>Syntax</h3>
+<pre>static int32 QSPIM_Info(
+   int32  infoType,
+   ...
+)
+</pre><h3>Description</h3>
+<pre>Get information about hardware and driver requirements
+
+The following info codes are supported:
+
+Code                      Description
+------------------------  -----------------------------
+LL_INFO_HW_CHARACTER      hardware characteristics
+LL_INFO_ADDRSPACE_COUNT   nr of required address spaces
+LL_INFO_ADDRSPACE         address space information
+LL_INFO_IRQ               interrupt required
+LL_INFO_LOCKMODE          process lock mode required
+
+The LL_INFO_HW_CHARACTER code returns all address and 
+data modes (ORed) which are supported by the hardware
+(MDIS_MAxx, MDIS_MDxx).
+
+The LL_INFO_ADDRSPACE_COUNT code returns the number
+of address spaces used by the driver.
+
+The LL_INFO_ADDRSPACE code returns information about one
+specific address space (MDIS_MAxx, MDIS_MDxx). The returned 
+data mode represents the widest hardware access used by 
+the driver.
+
+The LL_INFO_IRQ code returns whether the driver supports an
+interrupt routine (TRUE or FALSE).
+
+The LL_INFO_LOCKMODE code returns which process locking
+mode the driver needs (LL_LOCK_xxx).
+
+</pre><h3>Input</h3>
+<pre>infoType     info code
+...          argument(s)
+</pre><h3>Output</h3>
+<pre>return       success (0) or error code
+</pre><a name="intro1"><h1>Functions for 8240 DMA </h1></a>
+<pre>
+Required: -
+Switches: -
+
+</pre>
+<a name="DMA_Init"><h2>Function DMA_Init()</h2></a>
+
+<h3>Syntax</h3>
+<pre>void __DMA_Init(LL_HANDLE *h)
+</pre><h3>Description</h3>
+<pre>Init 8240 DMA
+
+</pre><h3>Input</h3>
+<pre>h      ll handle
+</pre><h3>Output</h3>
+<pre>-
+</pre>
+<a name="DMA_Transfer"><h2>Function DMA_Transfer()</h2></a>
+
+<h3>Syntax</h3>
+<pre>int32 __DMA_Transfer(
+    LL_HANDLE *h, 
+    void *src, 
+    void *dst, 
+    u_int32 len,
+    u_int32 dir)
+</pre><h3>Description</h3>
+<pre>Perform DMA transfer 
+
+Wait for it to finish 
+</pre><h3>Input</h3>
+<pre>h      ll handle
+src    source address
+dst    destination address
+len    number of bytes to transfer
+dir    direction
+       0 = mem -&#62; mem 
+       1 = mem -&#62; pci
+       2 = pci -&#62; mem
+       3 = pci -&#62; pci
+</pre><h3>Output</h3>
+<pre>returns: 0=ok 1=unsuccessful
+</pre></body>
+</html>

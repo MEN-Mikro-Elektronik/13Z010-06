@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="packagedesc.xsd">
+  <name>13z01006</name>
+  <description>MDIS5 driver package for MEN Z76 QSPI controller</description>
+  <date>2015-03-05</date>
+  <revision>2.12</revision>
+  <docroot>DRIVERS/MDIS_LL/QSPIM/DOC/main.html</docroot>
+  <modellist>
+    <model>
+      <hwname>16Z076_QSPI</hwname>
+			<description>QSPI in Chameleon FPGA</description>
+			<devnameprefix>QSPIM</devnameprefix>
+			<devtype>MDIS</devtype>
+      <autoid>
+        <chamunitid>0x34</chamunitid>
+        <chamv2id>76</chamv2id>
+      </autoid>
+      <bbslot>
+				<bbismodel>CHAMELEON</bbismodel>
+			</bbslot>
+			<bbslot>
+				<bbismodel>CHAMELEON_PCITBL</bbismodel>
+			</bbslot>
+			<!-- SW modules for Z076_QSPI FPGA -->
+			<swmodulelist>
+				<swmodule>
+					<name>z76_qspim</name>
+					<description>Driver for Z076_QSPI</description>
+					<type>Low Level Driver</type>
+					<makefilepath>QSPIM/DRIVER/COM/driver_z76.mak</makefilepath>
+				</swmodule>
+			</swmodulelist>
+		</model>
+		<model>
+			<hwname>16Z076_QSPI</hwname>
+			<modelname>16Z076_QSPI_EM1A05</modelname>
+			<description>QSPI on EM1A05</description>
+			<devnameprefix>QSPIM</devnameprefix>
+			<devtype>MDIS</devtype>
+			<autoid>
+				<chamunitid>0x34</chamunitid>
+				<chamv2id>76</chamv2id>
+			</autoid>
+			<bbslot>
+				<bbismodel>CHAMELEON</bbismodel>
+			</bbslot>
+			<bbslot>
+				<bbismodel>CHAMELEON_PCITBL</bbismodel>
+			</bbslot>
+			<!-- SW modules for Z076_QSPI_EM1A FPGA -->
+			<swmodulelist>
+				<swmodule>
+					<name>z76_qspim_em1a</name>
+					<description>Driver for Z076_QSPI on EM1A</description>
+					<type>Low Level Driver</type>
+					<makefilepath>QSPIM/DRIVER/COM/driver_z76_em1a.mak</makefilepath>
+				</swmodule>
+			</swmodulelist>
+		</model>
+		<model>
+			<hwname>QSPIM_A12</hwname>
+			<description>QSPI on A12</description>
+			<devnameprefix>QSPIM</devnameprefix>
+			<devtype>MDIS</devtype>
+			<bbslot>
+				<bbismodel>A12_OBMMODS</bbismodel>
+				<slot>0x1000</slot>
+			</bbslot>
+			<!-- SW modules for QSPIM on A12 -->
+			<swmodulelist>
+				<swmodule swap="false">
+					<name>qspim_a12</name>
+					<description>Driver for QSPIM on A12</description>
+					<type>Low Level Driver</type>
+					<makefilepath>QSPIM/DRIVER/COM/driver_a12.mak</makefilepath>
+				</swmodule>
+			</swmodulelist>
+		</model>
+		<model>
+			<hwname>16Z076_QSPI</hwname>
+			<modelname>16Z076_QSPI_DMA</modelname>
+			<description>QSPI using DMA</description>
+			<devnameprefix>QSPIM</devnameprefix>
+			<devtype>MDIS</devtype>
+			<autoid>
+				<chamv2id>76</chamv2id>
+				<chamv2grpmemid>62 24</chamv2grpmemid>
+			</autoid>
+			<bbslot>
+				<bbismodel>CHAMELEON</bbismodel>
+			</bbslot>
+			<bbslot>
+				<bbismodel>CHAMELEON_PCITBL</bbismodel>
+			</bbslot>
+			<bbslot>
+				<bbismodel>CHAMELEON_PCITBL_MSI</bbismodel>
+			</bbslot>
+			<!-- SW modules for Z076_QSPI_DMA -->
+			<swmodulelist>
+				<swmodule>
+					<name>z76_qspim_dma</name>
+					<description>Driver for Z076_QSPI using DMA</description>
+					<type>Low Level Driver</type>
+					<makefilepath>QSPIM/DRIVER/COM/driver_z76_dma_sw.mak</makefilepath>
+				</swmodule>
+				<swmodule>
+					<name>men_lx_a21_msi_enable</name>
+					<description>Customer specific driver for A21 MSI activation</description>
+					<type>Native Driver</type>
+					<makefilepath>DRIVERS/A21_MSI/driver.mak</makefilepath>
+					<os>Linux</os>
+				</swmodule>
+			</swmodulelist>
+		</model>
+	</modellist>
+	<settinglist>
+		<setting>
+			<name>IRQ_ENABLE</name>
+			<description>enable interrupts</description>
+			<type>U_INT32</type>
+			<value>1</value>
+			<defaultvalue>0</defaultvalue>
+			<choises>
+				<choise>
+					<value>1</value>
+					<description>enabled</description>
+				</choise>
+				<choise>
+					<value>0</value>
+					<description>disabled</description>
+				</choise>
+			</choises>
+		</setting>
+		<setting>
+			<name>PLD_CLOCK</name>
+			<description>clock rate of PLD in Hz</description>
+			<type>U_INT32</type>
+			<defaultvalue>33333333</defaultvalue>
+		</setting>
+		<setting>
+			<name>QSPI_QUEUE_LEN</name>
+			<description>64 for D201 prototype, 256 for A12  -- 16..256 words --</description>
+			<type>U_INT32</type>
+			<defaultvalue>256</defaultvalue>
+		</setting>
+		<setting>
+			<name>WOMQ</name>
+			<description>wired OR for QSPI pins</description>
+			<type>U_INT32</type>
+			<defaultvalue>0</defaultvalue>
+			<choises>
+				<choise>
+					<value>1</value>
+					<description>enabled</description>
+				</choise>
+				<choise>
+					<value>0</value>
+					<description>disabled</description>
+				</choise>
+			</choises>
+		</setting>
+		<setting>
+			<name>BITS</name>
+			<description>bits per word -- bits --</description>
+			<type>U_INT32</type>
+			<defaultvalue>16</defaultvalue>
+			<minvalue>8</minvalue>
+			<maxvalue>16</maxvalue>
+		</setting>
+		<setting>
+			<name>CPOL</name>
+			<description>clock polarity</description>
+			<type>U_INT32</type>
+			<defaultvalue>0</defaultvalue>
+			<choises>
+				<choise>
+					<value>1</value>
+					<description>enabled</description>
+				</choise>
+				<choise>
+					<value>0</value>
+					<description>disabled</description>
+				</choise>
+			</choises>
+		</setting>
+		<setting>
+			<name>CPHA</name>
+			<description>clock phase</description>
+			<type>U_INT32</type>
+			<defaultvalue>0</defaultvalue>
+			<choises>
+				<choise>
+					<value>1</value>
+					<description>enabled</description>
+				</choise>
+				<choise>
+					<value>0</value>
+					<description>disabled</description>
+				</choise>
+			</choises>
+		</setting>
+		<setting>
+			<name>BAUD</name>
+			<description>SCLK baudrate -- Hz --</description>
+			<type>U_INT32</type>
+			<defaultvalue>4000000</defaultvalue>
+		</setting>
+		<setting>
+			<name>DSCLK</name>
+			<description>PCS to SCLK delay -- ns --</description>
+			<type>U_INT32</type>
+			<defaultvalue>2000</defaultvalue>
+		</setting>
+		<setting>
+			<name>DTL</name>
+			<description>delay after transfer -- ns --</description>
+			<type>U_INT32</type>
+			<defaultvalue>1000</defaultvalue>
+		</setting>
+		<setting>
+			<name>PCS_DEFSTATE</name>
+			<description>default state of PCS3..0</description>
+			<type>U_INT32</type>
+			<defaultvalue>0x0</defaultvalue>
+			<minvalue>0x0</minvalue>
+			<maxvalue>0xf</maxvalue>
+		</setting>
+		<setting>
+			<name>TIMER_CYCLE_TIME</name>
+			<description>define cycle time of both high/low phase -- together, symmetric -- ns --</description>
+			<type>U_INT32</type>
+			<defaultvalue>500000</defaultvalue>
+		</setting>
+		<setting>
+			<name>RCV_FIFO_DEPTH</name>
+			<description>number of queue entries in fifo</description>
+			<type>U_INT32</type>
+			<defaultvalue>10</defaultvalue>
+			<minvalue>2</minvalue>
+		</setting>
+		<setting hidden="true">
+			<name>PLD_LOAD</name>
+			<description>load PLD -- only on D201 --</description>
+			<type>U_INT32</type>
+			<defaultvalue>0</defaultvalue>
+			<choises>
+				<choise>
+					<value>1</value>
+					<description>load PLD</description>
+				</choise>
+				<choise>
+					<value>0</value>
+					<description>don't load PLD</description>
+				</choise>
+			</choises>
+		</setting>
+	</settinglist>
+	<swmodulelist>
+		<swmodule internal="false">
+			<name>qspim_a4n</name>
+			<description>Example program for the QSPIM driver. To be used with A4N card and special connection.</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>QSPIM/EXAMPLE/QSPIM_A4N/COM/program.mak</makefilepath>
+		</swmodule>
+		<swmodule internal="false">
+			<name>qspim_cb</name>
+			<description>Example program for the QSPIM driver. Uses the callback mode.</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>QSPIM/EXAMPLE/QSPIM_CB/COM/program.mak</makefilepath>
+			<os>OS-9</os>
+		</swmodule>
+		<swmodule internal="false">
+			<name>qspim_sig</name>
+			<description>Example program for the QSPIM driver. Uses the signal mode.</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>QSPIM/EXAMPLE/QSPIM_SIG/COM/program.mak</makefilepath>
+		</swmodule>
+		<swmodule internal="false">
+			<name>qspim_bc02</name>
+			<description>Example program for the QSPIM driver. Configure BC02 ethernet switch.</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>QSPIM/EXAMPLE/QSPIM_BC02/COM/program.mak</makefilepath>
+		</swmodule>
+		<swmodule internal="false">
+			<name>qspim_fram</name>
+			<description>Example program for the QSPIM driver. Get access to FRAM (RAMTRON FM25H20)</description>
+			<type>Driver Specific Tool</type>
+			<makefilepath>QSPIM/EXAMPLE/QSPIM_FRAM/COM/program.mak</makefilepath>
+		</swmodule>
+	</swmodulelist>
+</package>
