@@ -11,13 +11,16 @@
  *
  *     Required: OSS, DESC, DBG, ID libraries
  *     Switches: _ONE_NAMESPACE_PER_DRIVER_
- *				 QSPIM_USE_DMA - use 8240 DMA. Works only on 8240 Map B boards
- *				 QSPIM_D201_SW - D201 in swapped mode
+ *		 QSPIM_SUPPORT_8240_DMA - use 8240 DMA. Works only on 8240 Map B boards
+ *               QSPIM_SUPPORT_A21_DMA  - support special customerspecific DMA mode of A21
+ *		 QSPIM_D201_SW - D201 in swapped mode
  *
  *	   Specification: 13Z010-06_S4.doc
  *
  *-------------------------------[ History ]---------------------------------
  *
+ *  --- end of mcvs controlled history log. see Stash for newer commits. ---
+ * 
  * $Log: qspim_drv.c,v $
  * Revision 2.7  2015/02/19 11:56:46  ts
  * R: changes in QSPI core on customer request
@@ -65,7 +68,7 @@
 
 #include "qspim_int.h"
 
-#if defined(LINUX) && defined(QSPIM_DMA)
+#if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
 #include <linux/slab.h>
 #endif
 
@@ -225,22 +228,29 @@ static int32 QSPIM_Init(
     h->maPlx      = ma[0];
     h->maQspi     = ma[1];
 #else
+#if defined (QSPIM_SUPPORT_A21_DMA) || defined (QSPIM_SUPPORT_8240_DMA)
+    /* this FPGA on A21 uses a group of 3 IP cores to form DMA support  */
     h->maQspi     = ma[0];
-	h->maDMA      = ma[1];
-	h->maSRAM     = ma[2];
-	
-	DBGWRT_1((DBH, "LL - QSPIM_Init: MACCESS handles:\n"));
-	DBGWRT_1((DBH, " ma[0] = %08x\n", h->maQspi ));
-	DBGWRT_1((DBH, " ma[1] = %08x\n", h->maDMA  ));
-	DBGWRT_1((DBH, " ma[2] = %08x\n", h->maSRAM ));
-#endif
-	h->qpdrShadow = 0;
-	h->devSemHdl = devSemHdl;
+    h->maDMA      = ma[1];
+    h->maSRAM     = ma[2];
+#else
 
-	if ((error = OSS_SemCreate(h->osHdl, OSS_SEM_BIN, 0,
+#endif
+	
+    DBGWRT_1((DBH, "LL - QSPIM_Init: MACCESS handles:\n"));
+    DBGWRT_1((DBH, " ma[0] (maQspi) = %08x\n", h->maQspi ));
+# if defined (QSPIM_SUPPORT_A21_DMA) || defined (QSPIM_SUPPORT_8240_DMA)
+    DBGWRT_1((DBH, " ma[1] (maDma)  = %08x\n", h->maDMA  ));
+    DBGWRT_1((DBH, " ma[2] (maSRAM) = %08x\n", h->maSRAM ));
+# endif
+#endif
+    h->qpdrShadow = 0;
+    h->devSemHdl = devSemHdl;
+    
+    if ((error = OSS_SemCreate(h->osHdl, OSS_SEM_BIN, 0,
 							   &h->readSemHdl))) {
-		return error;
-	}
+      return error;
+    }
 
     /*------------------------------+
     |  init id function table       |
@@ -365,7 +375,7 @@ static int32 QSPIM_Init(
 	}
 	h->xmtBufState = XMT_EMPTY;
 
-#ifdef QSPIM_DMA
+#ifdef QSPIM_SUPPORT_A21_DMA
 	/*--- alloc recv buffer ---*/
 	if( (h->recvBuf = (u_int8 *)OSS_MemGet( h->osHdl, h->qspiQueueLen*2,
 											&h->recvAlloc )) == NULL ){
@@ -376,7 +386,7 @@ static int32 QSPIM_Init(
 
 	__DMA_Init( h );			/* prepare for DMA */
 #endif
-#ifdef QSPIM_USE_DMA
+#ifdef QSPIM_SUPPORT_8240_DMA
 	__DMA_Init( h );			/* prepare for DMA */
 #endif
 
@@ -1236,7 +1246,7 @@ static int32 QSPIM_BlockRead(
 						error));
 			return ERR_LL_READ;
 		}
-#ifdef QSPIM_DMA
+#ifdef QSPIM_SUPPORT_A21_DMA
 		/* If we're using the blocking read mode in combination with the batch
 		 * DMA, we do not take the detour and use the receive FIFOs, but try to
 		 * get the data out of the driver as fast as possible without
@@ -1372,16 +1382,16 @@ static int32 DirectISetstat(
 
 #define OUT(hw,mem) (void)((*(volatile u_int32 *) (hw)) = (mem))
 
-#define MBLOCK_WRITE_BE32(ma,offs,size,src)					\
-	{ int sz=size>>2;										\
-		u_int32 *mem=(u_int32 *)src;						\
-		unsigned long hw = (MACCESS)(ma)+(offs)+_MAC_OFF_;	\
-		while(sz--){										\
-			OUT(hw,QSPISWAP(*mem));								\
-			mem++;											\
-			hw += 4;										\
-		}													\
-	}
+#define MBLOCK_WRITE_BE32(ma,offs,size,src)				\
+  { int sz=size>>2;							\
+    u_int32 *mem=(u_int32 *)src;					\
+    unsigned long hw = (MACCESS)(ma)+(offs)+_MAC_OFF_;			\
+    while(sz--){							\
+      OUT(hw,QSPISWAP(*mem));						\
+      mem++;								\
+      hw += 4;								\
+    }									\
+  }
 
 /****************************** QSPIM_DirectCopy *****************************
  *
@@ -1574,7 +1584,7 @@ static int32 QSPIM_Irq(
 
 		/*--- copy the driver buffer to the QSPI transmit RAM ---*/
 		if( h->xmtBufState == XMT_FILLED ){
-#ifdef QSPIM_USE_DMA
+#ifdef QSPIM_SUPPORT_8240_DMA
 			__DMA_Transfer( h, h->xmtBuf, (char *)ma + QSPI_ETRANRAM,
 							(h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen), 1 );
 #else
@@ -1587,7 +1597,7 @@ static int32 QSPIM_Irq(
                               (h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
                               h->xmtBuf );
 #endif /* QSPIM_Z076 */
-#endif /* QSPIM_USE_DMA */
+#endif /* QSPIM_SUPPORT_8240_DMA */
 			IDBGDMP_3((DBH,"Send Data",(void*)h->xmtBuf,h->frmLen,2));
 		}
 		else {
@@ -1654,10 +1664,10 @@ static int32 QSPIM_Irq(
 
 		}
 		/*--- copy QSPI receive RAM to receive fifo or overrun buffer---*/
-#if defined(QSPIM_USE_DMA)  
+#if defined(QSPIM_SUPPORT_8240_DMA)  
 	    __DMA_Transfer( h, (char *)ma + QSPI_ERECRAM, copyBuf,
 						(h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen), 2 );
-#elif defined (QSPIM_DMA)
+#elif defined (QSPIM_SUPPORT_A21_DMA)
 		if( h->xmtBufState == XMT_FILLED ){
 			__DMA_Transfer( h );
 			MWRITE_D8(ma, QSPI_SPCR4, 0x00 );		/* clear NEWQP */
@@ -1671,17 +1681,17 @@ static int32 QSPIM_Irq(
 				OSS_SigSend( h->osHdl, h->emgSig );
 			}
 		}
-#else  /* QSPIM_USE_DMA || QSPIM_DMA */
+#else  /* QSPIM_SUPPORT_8240_DMA || QSPIM_SUPPORT_A21_DMA */
 #ifdef QSPIM_Z076
 		MBLOCK_READ_D16( ma, QSPI_ERECRAM,
 							 h->frmLen&0x1 ? h->frmLen+1 : h->frmLen,
 							 (u_int16 *)copyBuf );
 #else
         MBLOCK_READ_D32( ma, QSPI_ERECRAM,
-                             (h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
+                             (h->frmLen & 0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
                              copyBuf );
 #endif /* QSPIM_Z076 */
-#endif /* QSPIM_USE_DMA */
+#endif /* QSPIM_SUPPORT_8240_DMA */
 
 		IDBGDMP_3((DBH,"Recv Data",(void*)copyBuf,h->frmLen,2));
 		/*--- call the application's callback routine if installed ---*/
@@ -1826,7 +1836,7 @@ static int32 QSPIM_Info(
 				*dataModeP = MDIS_MD_CHAM_0;
 				*addrSizeP = 0x800;
 				break;
-#ifdef QSPIM_DMA
+#ifdef QSPIM_SUPPORT_A21_DMA
 			case 1:	/* 16Z062 DMA */
 				*addrModeP = MDIS_MA_CHAMELEON;
 				*dataModeP = MDIS_MD_CHAM_1;
@@ -1907,7 +1917,7 @@ static int32 Cleanup(
 {
 
 	FreeRcvFifo( h );			/* free receive fifo */
-#ifdef QSPIM_DMA
+#ifdef QSPIM_SUPPORT_A21_DMA
 	if( h->recvBuf != NULL )
 		OSS_MemFree( h->osHdl, (void *)h->recvBuf, h->recvAlloc );
 #endif
@@ -1955,7 +1965,7 @@ static int32 Cleanup(
 static void FreeRcvFifo( LL_HANDLE *h )	/* nodoc */
 {
 	if( h->rcvFifoStart != NULL){
-#if defined(LINUX) && defined(QSPIM_DMA)
+#if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
 		kfree(h->rcvFifoStart);
 #else
 		OSS_MemFree( h->osHdl, (void *)h->rcvFifoStart, h->rcvFifoAlloc );
@@ -1991,12 +2001,11 @@ static int32 CreateRcvFifo( LL_HANDLE *h, int32 depth )	/* nodoc */
 	/*--- allocate memory for fifo ---*/
 	size = h->qspiQueueLen * 2 * depth;
 
-#if defined(LINUX) && defined(QSPIM_DMA)
+#if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
 	h->rcvFifoStart = kmalloc(size, GFP_DMA | GFP_KERNEL);
 #else
-	h->rcvFifoStart = (u_int8 *)OSS_MemGet( h->osHdl, size, &h->rcvFifoAlloc ));
+	h->rcvFifoStart = (u_int8 *)OSS_MemGet( h->osHdl, size, &h->rcvFifoAlloc );
 #endif
-
 	if( h->rcvFifoStart == NULL ){
 
 		DBGWRT_ERR((DBH,"*** QSPIM:CreateRcvFifo: couldn't alloc %d bytes\n",
@@ -2115,7 +2124,7 @@ static int32 DefineFrm( LL_HANDLE *h, M_SG_BLOCK *blk )	/* nodoc */
 
 	/*--- setup the endq pointer ---*/
 	MWRITE_D16( ma, QSPI_SPCR4, (cmdOff-1)<<8 );
-#if QSPIM_DMA
+#ifdef QSPIM_SUPPORT_A21_DMA
 	__DMA_UpdateSize( h );
 #endif
 
