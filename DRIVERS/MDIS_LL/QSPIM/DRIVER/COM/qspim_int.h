@@ -90,7 +90,7 @@
 # define ADDRSPACE_COUNT		2		/* nr of required address spaces */
 #endif
 
-#ifdef 
+#if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
 # define ADDRSPACE_COUNT		3		/* nr of required address spaces */
 #else
 # define ADDRSPACE_COUNT		1		/* nr of required address spaces */
@@ -217,7 +217,7 @@ typedef struct {
 	DBG_HANDLE      *dbgHdl;        /* debug handle */
 	/* misc */
     u_int32         irqCount;       /* interrupt counter */
-	u_int32			pldLoad;		xxxxsss/* load PLD in init */
+	u_int32			pldLoad;		/* load PLD in init */
 	u_int32			qspiQueueLen; 	/* max entries used in queue */
 	u_int32			frmLen;			/* bytes used in QSPI rcv/xmt ram */
 
