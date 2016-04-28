@@ -90,7 +90,7 @@
 # define ADDRSPACE_COUNT		2		/* nr of required address spaces */
 #endif
 
-#ifdef QSPIM_DMA
+#ifdef 
 # define ADDRSPACE_COUNT		3		/* nr of required address spaces */
 #else
 # define ADDRSPACE_COUNT		1		/* nr of required address spaces */
@@ -205,7 +205,8 @@ typedef struct {
     MACCESS         maPlx;          /* hw access handle (PLX) */
 #endif
     MACCESS         maQspi;         /* hw access handle (QSPI) */
-#ifdef QSPIM_DMA
+
+#if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
 	MACCESS         maDMA;         /* hw access handle (Z62 DMA) */
 	MACCESS         maSRAM;         /* hw access handle (Z24 SRAM) */
 #endif
@@ -216,7 +217,7 @@ typedef struct {
 	DBG_HANDLE      *dbgHdl;        /* debug handle */
 	/* misc */
     u_int32         irqCount;       /* interrupt counter */
-	u_int32			pldLoad;		/* load PLD in init */
+	u_int32			pldLoad;		xxxxsss/* load PLD in init */
 	u_int32			qspiQueueLen; 	/* max entries used in queue */
 	u_int32			frmLen;			/* bytes used in QSPI rcv/xmt ram */
 
@@ -251,7 +252,7 @@ typedef struct {
 	int32			xmtBufState; 	/* see defs above */
 	u_int32			xmtAlloc;		/* memory allocated for xmtBuf */
 
-#ifdef QSPIM_DMA
+#if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
 	/*---------------------------------------------------+  
 	| DMA receive buffer                                 |
 	|                                                    |
@@ -275,7 +276,7 @@ typedef struct {
 	void			*callbackArg; 	/* argument to function */
 	void			*callbackStatics; /* OS-9: static storage ptr for callbk */
 
-#ifdef QSPIM_USE_DMA
+#if defined(QSPIM_SUPPORT_8240_DMA) 
 	MACCESS			dmaMa;			/* embedded utility block MACCESS */
 #endif
 } LL_HANDLE;
@@ -284,7 +285,7 @@ typedef struct {
 #include <MEN/ll_entry.h>   /* low-level driver jump table  */
 #include <MEN/qspim_drv.h>   /* QSPIM driver header file */
 
-#define __LoadD201Pld	QSPIM_GLOBNAME(QSPIM_VARIANT,LoadD201Pld)
+#define __LoadD201Pld		QSPIM_GLOBNAME(QSPIM_VARIANT,LoadD201Pld)
 #define __QSPIM_PldData 	QSPIM_GLOBNAME(QSPIM_VARIANT,PldData)
 #define __QSPIM_PldIdent 	QSPIM_GLOBNAME(QSPIM_VARIANT,PldIdent)
 #define __DMA_Init		 	QSPIM_GLOBNAME(QSPIM_VARIANT,DMA_Init)
@@ -301,16 +302,15 @@ extern const u_int8 __QSPIM_PldData[];
 extern char* __QSPIM_PldIdent(void);
 extern int __LoadD201Pld(LL_HANDLE *h);
 
-#if defined(QSPIM_USE_DMA) 
+#if defined(QSPIM_SUPPORT_8240_DMA) || defined(QSPIM_SUPPORT_A21_DMA)
 extern void __DMA_Init(LL_HANDLE *h);
-extern int32 __DMA_Transfer(
-	LL_HANDLE *h,
-	void *src,
-	void *dst,
-	u_int32 len,
-	u_int32 dir);
-#elif defined(QSPIM_DMA)
-extern void __DMA_Init(LL_HANDLE *h);
+#endif
+
+#if defined(QSPIM_SUPPORT_8240_DMA)
+extern int32 __DMA_Transfer(LL_HANDLE *h,void *src, void *dst, u_int32 len, u_int32 dir);
+#endif
+
+#if defined(QSPIM_SUPPORT_A21_DMA)
 extern int32 __DMA_Transfer(LL_HANDLE *h);
 extern void __DMA_UpdateSize(LL_HANDLE *h);
 #endif

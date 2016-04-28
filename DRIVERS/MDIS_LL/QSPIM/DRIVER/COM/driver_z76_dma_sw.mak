@@ -11,7 +11,7 @@
 #
 #   $Log: driver_z76_dma_sw.mak,v $
 #   Revision 2.2  2015/03/05 18:08:52  ts
-#   R: built module name was wrong, not to distuingish from regular sw variant
+#   R: built module name was wrong, not to distinguish from regular sw variant
 #   M: changed mak_name to z76_qspim_dma_sw
 #
 #   Revision 2.1  2015/02/19 12:28:24  ts
@@ -35,7 +35,7 @@ MAK_SWITCH= $(SW_PREFIX)MAC_MEM_MAPPED \
 			$(SW_PREFIX)MAC_BYTESWAP \
 			$(SW_PREFIX)QSPIM_Z076 \
 			$(SW_PREFIX)QSPIM_VARIANT=Z76_QSPI_SW \
-			$(SW_PREFIX)QSPIM_DMA
+			$(SW_PREFIX)QSPIM_SUPPORT_A21_DMA
 
 MAK_LIBS=$(LIB_PREFIX)$(MEN_LIB_DIR)/desc$(LIB_SUFFIX)	\
          $(LIB_PREFIX)$(MEN_LIB_DIR)/oss$(LIB_SUFFIX)	\

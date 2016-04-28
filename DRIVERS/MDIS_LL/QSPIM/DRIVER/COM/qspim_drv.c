@@ -12,8 +12,8 @@
  *     Required: OSS, DESC, DBG, ID libraries
  *     Switches: _ONE_NAMESPACE_PER_DRIVER_
  *		 QSPIM_SUPPORT_8240_DMA - use 8240 DMA. Works only on 8240 Map B boards
- *               QSPIM_SUPPORT_A21_DMA  - support special customerspecific DMA mode of A21
- *		 QSPIM_D201_SW - D201 in swapped mode
+ *       QSPIM_SUPPORT_A21_DMA  - support special customerspecific DMA mode of A21
+ *		 QSPIM_D201_SW 			- D201 in swapped mode
  *
  *	   Specification: 13Z010-06_S4.doc
  *
@@ -389,7 +389,6 @@ static int32 QSPIM_Init(
 #ifdef QSPIM_SUPPORT_8240_DMA
 	__DMA_Init( h );			/* prepare for DMA */
 #endif
-
 
 	*hP = h;	/* set low-level driver handle */
 abort:
