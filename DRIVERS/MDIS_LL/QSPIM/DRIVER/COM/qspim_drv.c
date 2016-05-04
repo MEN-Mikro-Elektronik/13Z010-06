@@ -74,6 +74,10 @@
 
 /* #define GPIO_DEBUG 1 */
 
+#ifndef _MAC_OFF_
+#define _MAC_OFF_ 	0
+#endif
+
 
 #define QSPISWAP(x) ((((x) & 0xff000000) >> 8)  |	\
 				 (((x) & 0x00ff0000) << 8)  |	\
@@ -1379,17 +1383,20 @@ static int32 DirectISetstat(
 	return(error);
 }
 
+
+
+
 #define OUT(hw,mem) (void)((*(volatile u_int32 *) (hw)) = (mem))
 
-#define MBLOCK_WRITE_BE32(ma,offs,size,src)				\
+#define MBLOCK_WRITE_BE32(ma,offs,size,src)	\
   { int sz=size>>2;							\
-    u_int32 *mem=(u_int32 *)src;					\
-    unsigned long hw = (MACCESS)(ma)+(offs)+_MAC_OFF_;			\
+    u_int32 *mem=(u_int32 *)src;			\
+    unsigned long hw = (MACCESS)(ma)+(offs)+_MAC_OFF_;	\
     while(sz--){							\
-      OUT(hw,QSPISWAP(*mem));						\
+      OUT(hw,QSPISWAP(*mem));				\
       mem++;								\
       hw += 4;								\
-    }									\
+    }										\
   }
 
 /****************************** QSPIM_DirectCopy *****************************
