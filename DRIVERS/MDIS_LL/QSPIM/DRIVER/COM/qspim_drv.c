@@ -231,14 +231,13 @@ static int32 QSPIM_Init(
 #ifdef QSPIM_D201_SW
     h->maPlx      = ma[0];
     h->maQspi     = ma[1];
-#else
-#if defined (QSPIM_SUPPORT_A21_DMA) || defined (QSPIM_SUPPORT_8240_DMA)
+#elif defined (QSPIM_SUPPORT_A21_DMA) || defined (QSPIM_SUPPORT_8240_DMA)
     /* this FPGA on A21 uses a group of 3 IP cores to form DMA support  */
     h->maQspi     = ma[0];
     h->maDMA      = ma[1];
     h->maSRAM     = ma[2];
 #else
-
+    h->maQspi     = ma[0];
 #endif
 	
     DBGWRT_1((DBH, "LL - QSPIM_Init: MACCESS handles:\n"));
@@ -247,7 +246,7 @@ static int32 QSPIM_Init(
     DBGWRT_1((DBH, " ma[1] (maDma)  = %08x\n", h->maDMA  ));
     DBGWRT_1((DBH, " ma[2] (maSRAM) = %08x\n", h->maSRAM ));
 # endif
-#endif
+    
     h->qpdrShadow = 0;
     h->devSemHdl = devSemHdl;
     
@@ -1382,9 +1381,6 @@ static int32 DirectISetstat(
 
 	return(error);
 }
-
-
-
 
 #define OUT(hw,mem) (void)((*(volatile u_int32 *) (hw)) = (mem))
 
