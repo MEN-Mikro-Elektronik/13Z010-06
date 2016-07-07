@@ -252,6 +252,7 @@ static int32 QSPIM_Init(
     
     if ((error = OSS_SemCreate(h->osHdl, OSS_SEM_BIN, 0,
 							   &h->readSemHdl))) {
+      OSS_MemFree(osHdl, h, gotsize); /* klocwork 2nd id20012 */
       return error;
     }
 
