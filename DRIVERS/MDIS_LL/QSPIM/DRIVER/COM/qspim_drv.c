@@ -1388,7 +1388,7 @@ static int32 DirectISetstat(
 #define MBLOCK_WRITE_BE32(ma,offs,size,src)	\
   { int sz=size>>2;							\
     u_int32 *mem=(u_int32 *)src;			\
-    unsigned long hw = (MACCESS)(ma)+(offs)+_MAC_OFF_;	\
+    unsigned long hw = (unsigned long)(ma)+(offs)+_MAC_OFF_;	\
     while(sz--){							\
       OUT(hw,QSPISWAP(*mem));				\
       mem++;								\
