@@ -2,8 +2,8 @@
 <package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="packagedesc.xsd">
   <name>13z01006</name>
   <description>MDIS5 driver package for MEN Z76 QSPI controller</description>
-  <date>2016-07-13</date>
-  <revision>2.14</revision>
+  <date>2016-07-15</date>
+  <revision>2.15</revision>
   <docroot>DRIVERS/MDIS_LL/QSPIM/DOC/main.html</docroot>
   <modellist>
     <model>

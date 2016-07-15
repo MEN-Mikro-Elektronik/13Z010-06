@@ -73,8 +73,8 @@ static const char RCSid[]="$Id: qspim_fram.c,v 1.2 2014/07/22 10:27:27 ts Exp $"
 +-------------------------------------*/
 typedef enum {
 	none,
-	read,
-	write
+	qspread,
+	qspwrite
 } RW_TYPE;
 
 /*-------------------------------------+
@@ -174,7 +174,7 @@ int main( int argc, char *argv[] )
 			usage();
 			return(1);
 		}
-		readwrite=read;
+		readwrite=qspread;
 	}
 	else {
 		reg = 0x00;
@@ -196,7 +196,7 @@ int main( int argc, char *argv[] )
 	/* write access */
 	if( (str = UTL_TSTOPT("b=")) ) {
 		sscanf( str, "%x", &val );
-		readwrite=write;
+		readwrite=qspwrite;
 	}
 
 	memtest = ( UTL_TSTOPT("m") ? 1 : 0 );
@@ -326,7 +326,7 @@ int main( int argc, char *argv[] )
 		|  Single Transfer        |
 		+------------------------*/
 
-		if( readwrite == write ) {
+		if( readwrite == qspwrite ) {
 			/* Send write enable */
 			txFrmBuf[CMD]      = CMD_WREN;		/* command */
 			txFrmBuf[ADDR_MSB] = 0x00;			/* address (unused) */
