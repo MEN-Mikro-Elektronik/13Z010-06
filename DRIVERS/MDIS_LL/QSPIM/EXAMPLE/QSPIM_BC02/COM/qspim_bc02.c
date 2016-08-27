@@ -519,7 +519,7 @@ int main(int argc, char *argv[])
 	/* one reg */
 	else {
 		/* read */
-		if( singleRw == read ){
+		if( singleRw == qspread ){
 			printf("=== read from reg 0x%02x: 0x%02x ===\n", reg, rxFrmBuf[DATA] );
 		}
 		/* write */
