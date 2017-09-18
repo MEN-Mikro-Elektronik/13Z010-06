@@ -5,8 +5,8 @@
  ****************************************************************************
  *  
  *       Author: kp
- *        $Date: 2010/05/10 14:21:25 $
- *    $Revision: 1.5 $
+ *        $Date: 2001/05/25 11:09:23 $
+ *    $Revision: 1.3 $
  *
  *  Description: Example program for the QSPIM driver
  *				 Uses the callback mode.
@@ -21,16 +21,6 @@
  *-------------------------------[ History ]---------------------------------
  *
  * $Log: qspim_cb.c,v $
- * Revision 1.5  2010/05/10 14:21:25  amorbach
- * R: APB build failed
- * M: 1. variable type path changed to MDIS_PATH
- *    2. data type of variable i changed to u_int16
- *
- * Revision 1.4  2010/05/06 10:57:44  amorbach
- * R: Porting to MDIS5
- * M: 1. added support for 64bit (MDIS_PATH)
- *    2. added  __MAPILIB to SigHandler
- *
  * Revision 1.3  2001/05/25 11:09:23  kp
  * Toggle FRAMESYN signal every 100th cycle using new direct isetstat function
  *
@@ -44,10 +34,10 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2010 by MEN mikro elektronik GmbH, Nuernberg, Germany 
+ * (c) Copyright 2000 by MEN mikro elektronik GmbH, Nuernberg, Germany 
  ****************************************************************************/
  
-static const char RCSid[]="$Id: qspim_cb.c,v 1.5 2010/05/10 14:21:25 amorbach Exp $";
+static const char RCSid[]="$Id: qspim_cb.c,v 1.3 2001/05/25 11:09:23 kp Exp $";
 
 
 #ifdef OS9000
@@ -100,7 +90,7 @@ static const char RCSid[]="$Id: qspim_cb.c,v 1.5 2010/05/10 14:21:25 amorbach Ex
 /*--------------------------------------+
 |   GLOBALS                             |
 +--------------------------------------*/
-static MDIS_PATH G_path;
+static int32 G_path;
 static u_int16 G_txFrmBuf[256];
 static int32   G_frmSize;
 static volatile u_int32 G_xmtErrors;
@@ -123,7 +113,7 @@ DBG_HANDLE *G_dbh;
 |   PROTOTYPES                          |
 +--------------------------------------*/
 static void PrintError(char *info);
-static void __MAPILIB SigHandler(u_int32 sigCode);
+static void SigHandler(u_int32 sigCode);
 void Callback( void *arg,u_int16 *qspiFrame, u_int32 qspiFrameLen );
 u_int32 CallbackDpc(void);
 static void FillFrame( int32 frameNum );
@@ -141,8 +131,7 @@ static void FillFrame( int32 frameNum );
 int main(int argc, char *argv[])
 {
 	M_SG_BLOCK blk;
-	MDIS_PATH	path;
-	int32	i;
+	int32	path, i;
 	char	*device;
 	u_int16 defFrm[16];
 
@@ -419,7 +408,7 @@ u_int32 CallbackDpc(void)
  *  Output.....: 
  *  Globals....: -
  ****************************************************************************/
-static void __MAPILIB SigHandler(u_int32 sigCode)
+static void SigHandler(u_int32 sigCode)
 {
 	switch( sigCode ){
 	case UOS_SIG_USR2:
@@ -486,6 +475,5 @@ int printf( const char *fmt, ... )
 
 
 #endif /* OS9000 */
-
 
 

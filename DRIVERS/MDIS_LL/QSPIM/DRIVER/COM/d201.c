@@ -4,8 +4,8 @@
  *      Project: QSPI for Mahr. Prototype phase with D201
  *
  *       Author: kp
- *        $Date: 2010/05/06 10:53:41 $
- *    $Revision: 1.2 $
+ *        $Date: 2000/09/25 13:24:03 $
+ *    $Revision: 1.1 $
  *
  *  Description: Load the D201 PLD with QSPI code
  *                      
@@ -19,10 +19,6 @@
  *-------------------------------[ History ]---------------------------------
  *
  * $Log: d201.c,v $
- * Revision 1.2  2010/05/06 10:53:41  amorbach
- * R: Porting to MDIS5 (according porting guide rev. 0.8)
- * M: put all MACCESS macros conditionals in brackets
- *
  * Revision 1.1  2000/09/25 13:24:03  kp
  * Initial Revision
  *
@@ -215,12 +211,10 @@ static void PLDCB_SetData(void *arg, u_int8 state)		/* nodoc */
 {
 	LL_HANDLE *h = (LL_HANDLE *)arg;
 
-    if(state) {
+    if(state)
         MSETMASK_D32( h->maPlx, RR_MISC, D201_PLD_DATA );
-    }
-    else {
+    else
         MCLRMASK_D32( h->maPlx, RR_MISC, D201_PLD_DATA );
-    }
 }
 
 /****************************** PLDCB_SetDclk *******************************
@@ -238,12 +232,10 @@ static void PLDCB_SetDclk(void *arg, u_int8 state)		/* nodoc */
 {
 	LL_HANDLE *h = (LL_HANDLE *)arg;
 
-    if(state) {
+    if(state)
         MSETMASK_D32( h->maPlx, RR_MISC, D201_PLD_DCLK );
-    }
-    else {
+    else
         MCLRMASK_D32( h->maPlx, RR_MISC, D201_PLD_DCLK );
-    }
 }
 
 /****************************** PLDCB_SetConfig *****************************
@@ -261,11 +253,9 @@ static void PLDCB_SetConfig(void *arg, u_int8 state)		/* nodoc */
 {
 	LL_HANDLE *h = (LL_HANDLE *)arg;
 
-    if(state) {
+    if(state)
         MSETMASK_D32( h->maPlx, RR_MISC, D201_PLD_CONFIG );
-    }
-    else {
+    else
         MCLRMASK_D32( h->maPlx, RR_MISC, D201_PLD_CONFIG );
-    }
 }
 

@@ -1,19 +1,14 @@
 #***************************  M a k e f i l e  *******************************
 #
 #         Author: kp
-#          $Date: 2010/05/06 10:55:47 $
-#      $Revision: 1.2 $
+#          $Date: 2001/04/11 10:22:51 $
+#      $Revision: 1.1 $
 #
 #    Description: Makefile definitions for the QSPIM driver
 #
 #---------------------------------[ History ]---------------------------------
 #
 #   $Log: driver_d201.mak,v $
-#   Revision 1.2  2010/05/06 10:55:47  amorbach
-#   R: MDVE check failed
-#   M: 1. QSPIM_VARIANT added
-#      2. MAK_NAME corrected
-#
 #   Revision 1.1  2001/04/11 10:22:51  kp
 #   Initial Revision
 #
@@ -24,10 +19,10 @@
 #   (c) Copyright 2000 by MEN mikro elektronik GmbH, Nuernberg, Germany
 #*****************************************************************************
 
-MAK_NAME=z76_qspim_d201
+MAK_NAME=qspim_d201
 
 MAK_SWITCH=$(SW_PREFIX)MAC_MEM_MAPPED \
-		   $(SW_PREFIX)QSPIM_VARIANT=Z76_QSPIM_D201_SW
+		   $(SW_PREFIX)QSPIM_D201_SW
 
 MAK_LIBS=$(LIB_PREFIX)$(MEN_LIB_DIR)/desc$(LIB_SUFFIX)	\
          $(LIB_PREFIX)$(MEN_LIB_DIR)/pld$(LIB_SUFFIX)	\

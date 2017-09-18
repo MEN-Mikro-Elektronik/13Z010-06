@@ -68,8 +68,8 @@ static const char RCSid[]="$Id: qspim_bc02.c,v 1.2 2014/07/21 16:04:27 ts Exp $"
 +--------------------------------------*/
 typedef enum {
 	none,
-	qspread,
-	qspwrite
+	read,
+	write
 } SINGLE_RW_TYPE;
 
 /*--------------------------------------+
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 			usage();
 			return(1);
 		}
-		singleRw = qspread;
+		singleRw = read;
 	}
 	else {
 		singleRw = none;
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 			usage();
 			return(1);
 		}
-		singleRw = qspwrite;	
+		singleRw = write;	
 	}
 
 	dump = (UTL_TSTOPT("d") ? 1 : 0);
@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
 			trxNbr = 1;
 
 			/* read */
-			if( singleRw == qspread ){
+			if( singleRw == read ){
 				txFrmBuf[CMD] = CMD_READ;	/* command */
 				txFrmBuf[DATA] = 0x00;		/* data (unused) */
 			}
@@ -519,7 +519,7 @@ int main(int argc, char *argv[])
 	/* one reg */
 	else {
 		/* read */
-		if( singleRw == qspread ){
+		if( singleRw == read ){
 			printf("=== read from reg 0x%02x: 0x%02x ===\n", reg, rxFrmBuf[DATA] );
 		}
 		/* write */

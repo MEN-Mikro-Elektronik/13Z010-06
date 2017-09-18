@@ -1,18 +1,14 @@
 #***************************  M a k e f i l e  *******************************
 #
 #         Author: kp
-#          $Date: 2010/05/06 10:54:51 $
-#      $Revision: 1.3 $
+#          $Date: 2006/03/01 20:49:10 $
+#      $Revision: 1.2 $
 #
 #    Description: Makefile definitions for the A12 QSPIM driver
 #
 #---------------------------------[ History ]---------------------------------
 #
 #   $Log: driver_a12.mak,v $
-#   Revision 1.3  2010/05/06 10:54:51  amorbach
-#   R: MDVE check failed
-#   M: QSPIM_VARIANT added
-#
 #   Revision 1.2  2006/03/01 20:49:10  cs
 #   fixes: added pld.o and modcom.h
 #
@@ -26,8 +22,7 @@
 MAK_NAME=qspim_a12
 
 MAK_SWITCH=$(SW_PREFIX)MAC_MEM_MAPPED \
-           $(SW_PREFIX)QSPIM_USE_DMA   \
-		   $(SW_PREFIX)QSPIM_VARIANT=QSPIM_A12
+           $(SW_PREFIX)QSPIM_USE_DMA
 
 MAK_LIBS=$(LIB_PREFIX)$(MEN_LIB_DIR)/desc$(LIB_SUFFIX)	\
          $(LIB_PREFIX)$(MEN_LIB_DIR)/oss$(LIB_SUFFIX)	\

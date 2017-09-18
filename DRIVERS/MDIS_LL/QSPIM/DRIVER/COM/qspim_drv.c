@@ -4,49 +4,21 @@
  *      Project: QSPIM driver (MDIS4)
  *
  *       Author: kp
- *        $Date: 2015/02/19 11:56:46 $
- *    $Revision: 2.7 $
+ *        $Date: 2006/03/01 20:49:14 $
+ *    $Revision: 2.2 $
  *
  *  Description: Low-level driver for QSPI interface Mahr project
  *
  *     Required: OSS, DESC, DBG, ID libraries
  *     Switches: _ONE_NAMESPACE_PER_DRIVER_
- *		 QSPIM_SUPPORT_8240_DMA - use 8240 DMA. Works only on 8240 Map B boards
- *       QSPIM_SUPPORT_A21_DMA  - support special customerspecific DMA mode of A21
- *		 QSPIM_D201_SW 			- D201 in swapped mode
+ *				 QSPIM_USE_DMA - use 8240 DMA. Works only on 8240 Map B boards
+ *				 QSPIM_D201_SW - D201 in swapped mode
  *
  *	   Specification: 13Z010-06_S4.doc
  *
  *-------------------------------[ History ]---------------------------------
  *
- *  --- end of mcvs controlled history log. see Stash for newer commits. ---
- * 
  * $Log: qspim_drv.c,v $
- * Revision 2.7  2015/02/19 11:56:46  ts
- * R: changes in QSPI core on customer request
- * M: built in direct QSPI mode, auto mode, DMA transfer
- *
- * Revision 2.6  2014/08/26 13:53:56  jt
- * R: It was not possible to use blocking I/O on driver's read
- * M: Implement blocking read functionallity
- *
- * Revision 2.5  2012/03/12 13:55:03  dpfeuffer
- * R:1. QSPIM_BC02 example application for AE57
- * M:1.a) QSPIM_NO_DUPLICATION setstat added
- *     b) QSPIM_Irq(): added option to prevent frame duplication
- *
- * Revision 2.4  2010/05/06 11:06:20  amorbach
- * R: 1.  Porting to MDIS5 (according porting guide rev. 0.7)
- * 2.  EaI: setstat value can be zero - division by zero
- * M: 1a. added support for 64bit (Set/GetStat prototypes, m_read calls)
- * 1b. put all MACCESS macros conditionals in brackets
- * 2.  parameter check added
- *
- * Revision 2.3  2010/04/30 15:08:04  ag
- * R:1. Driver didn’t work on little-endian platforms.
- * M:1. Adapted register layout because swapping was removed in FPGA.
- * ATTENTION: For EM1A now driver_z76_em1a(_sw).mak must be used.
- *
  * Revision 2.2  2006/03/01 20:49:14  cs
  * replaced OSS_IrqMask/OSS_IrqUnMask with OSS_IrqMaskR/OSS_IrqRestore
  * removed timing debugs (getTimeBase())
@@ -63,42 +35,23 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
+ * (c) Copyright 2000 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
 
 #include "qspim_int.h"
-
-#if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
-#include <linux/slab.h>
-#endif
-
-/* #define GPIO_DEBUG 1 */
-
-#ifndef _MAC_OFF_
-#define _MAC_OFF_ 	0
-#endif
-
-
-#define QSPISWAP(x) ((((x) & 0xff000000) >> 8)  |	\
-				 (((x) & 0x00ff0000) << 8)  |	\
-				 (((x) & 0x0000ff00) >> 8)  |	\
-				 (((x) & 0x000000ff) << 8))
 
 
 /*-----------------------------------------+
 |  PROTOTYPES                              |
 +-----------------------------------------*/
-static int32 QSPIM_Init(DESC_SPEC *descSpec, 
-			OSS_HANDLE *osHdl,
-			MACCESS ma[ADDRSPACE_COUNT], 
-			OSS_SEM_HANDLE *devSemHdl,
-			OSS_IRQ_HANDLE *irqHdl, 
-			LL_HANDLE **hP);
+static int32 QSPIM_Init(DESC_SPEC *descSpec, OSS_HANDLE *osHdl,
+					   MACCESS *ma, OSS_SEM_HANDLE *devSemHdl,
+					   OSS_IRQ_HANDLE *irqHdl, LL_HANDLE **hP);
 static int32 QSPIM_Exit(LL_HANDLE **hP );
 static int32 QSPIM_Read(LL_HANDLE *h, int32 ch, int32 *value);
 static int32 QSPIM_Write(LL_HANDLE *h, int32 ch, int32 value);
-static int32 QSPIM_SetStat(LL_HANDLE *h,int32 ch, int32 code, INT32_OR_64 value32_or_64);
-static int32 QSPIM_GetStat(LL_HANDLE *h, int32 ch, int32 code, INT32_OR_64 *value32_or_64P);
+static int32 QSPIM_SetStat(LL_HANDLE *h,int32 ch, int32 code, int32 value);
+static int32 QSPIM_GetStat(LL_HANDLE *h, int32 ch, int32 code,int32 *valueP);
 static int32 QSPIM_BlockRead(LL_HANDLE *h, int32 ch, void *buf, int32 size,
 							int32 *nbrRdBytesP);
 static int32 DirectWriteFunc(
@@ -200,7 +153,7 @@ static void CopyBlock( u_int32 *src, u_int32 *dst, u_int32 size );
 static int32 QSPIM_Init(
     DESC_SPEC       *descP,
     OSS_HANDLE      *osHdl,
-	MACCESS         ma[],
+    MACCESS         *ma,
     OSS_SEM_HANDLE  *devSemHdl,
     OSS_IRQ_HANDLE  *irqHdl,
     LL_HANDLE       **hP
@@ -231,30 +184,10 @@ static int32 QSPIM_Init(
 #ifdef QSPIM_D201_SW
     h->maPlx      = ma[0];
     h->maQspi     = ma[1];
-#elif defined (QSPIM_SUPPORT_A21_DMA) || defined (QSPIM_SUPPORT_8240_DMA)
-    /* this FPGA on A21 uses a group of 3 IP cores to form DMA support  */
-    h->maQspi     = ma[0];
-    h->maDMA      = ma[1];
-    h->maSRAM     = ma[2];
 #else
     h->maQspi     = ma[0];
 #endif
-	
-    DBGWRT_1((DBH, "LL - QSPIM_Init: MACCESS handles:\n"));
-    DBGWRT_1((DBH, " ma[0] (maQspi) = %08x\n", h->maQspi ));
-# if defined (QSPIM_SUPPORT_A21_DMA) || defined (QSPIM_SUPPORT_8240_DMA)
-    DBGWRT_1((DBH, " ma[1] (maDma)  = %08x\n", h->maDMA  ));
-    DBGWRT_1((DBH, " ma[2] (maSRAM) = %08x\n", h->maSRAM ));
-# endif
-    
-    h->qpdrShadow = 0;
-    h->devSemHdl = devSemHdl;
-    
-    if ((error = OSS_SemCreate(h->osHdl, OSS_SEM_BIN, 0,
-							   &h->readSemHdl))) {
-      OSS_MemFree(osHdl, h, gotsize); /* klocwork 2nd id20012 */
-      return error;
-    }
+	h->qpdrShadow = 0;
 
     /*------------------------------+
     |  init id function table       |
@@ -322,14 +255,8 @@ static int32 QSPIM_Init(
 	MSETMASK_D8( h->maQspi, QSPI_QILR, 0x38 );		/* allow qsm interrupts */
 #endif
 	MWRITE_D8( h->maQspi, QSPI_QIVR, 0xff );		/* allow qsm interrupts */
-	/* JT 22-01-2015 */
-#ifndef GPIO_DEBUG 
 	MWRITE_D8( h->maQspi, QSPI_QPAR, 0x7b );		/* define QSM pins */
 
-#else
-	MWRITE_D8( h->maQspi, QSPI_QPAR, 0x3b );
-#endif	/* GPIO_DEBUG */
-	/* JT 22-01-2015 */
 #ifndef QSPIM_D201_SW
 	MWRITE_D16( h->maQspi, QSPI_TIMER, 0 );			/* stop QSPI timer */
 #endif
@@ -366,10 +293,6 @@ static int32 QSPIM_Init(
 	GET_PARAM( "RCV_FIFO_DEPTH", 10, val );
 	if( (error = QSPIM_SetStat( h, QSPIM_RCV_FIFO_DEPTH, 0, val ))) goto abort;
 
-
-	GET_PARAM( "BLOCKING_READ", 0, val );
-	if( (error = QSPIM_SetStat( h, QSPIM_BLOCKING_READ, 0, val ))) goto abort;
-
 	/*--- alloc xmit buffer ---*/
 	if( (h->xmtBuf = (u_int8 *)OSS_MemGet( h->osHdl, h->qspiQueueLen*2,
 										   &h->xmtAlloc )) == NULL ){
@@ -379,20 +302,10 @@ static int32 QSPIM_Init(
 	}
 	h->xmtBufState = XMT_EMPTY;
 
-#ifdef QSPIM_SUPPORT_A21_DMA
-	/*--- alloc recv buffer ---*/
-	if( (h->recvBuf = (u_int8 *)OSS_MemGet( h->osHdl, h->qspiQueueLen*2,
-											&h->recvAlloc )) == NULL ){
-		DBGWRT_ERR((DBH,"*** QSPIM_Init: can't alloc xmitBuf\n" ));
-		error = ERR_OSS_MEM_ALLOC;
-		goto abort;		
-	}
+#ifdef QSPIM_USE_DMA
+	__DMA_Init( h );			/* prepare for DMA */
+#endif
 
-	__DMA_Init( h );			/* prepare for DMA */
-#endif
-#ifdef QSPIM_SUPPORT_8240_DMA
-	__DMA_Init( h );			/* prepare for DMA */
-#endif
 
 	*hP = h;	/* set low-level driver handle */
 abort:
@@ -515,8 +428,6 @@ static int32 QSPIM_Write(
  *	QSPIM_TIMER_HI_TIME	 high time of cycle timer		 [ns]
  *	QSPIM_RCV_FIFO_DEPTH number of queue entries in fifo 2..n
  *  QSPIM_BLK_DEFINE_FRM defines the frame structure	 see below
- *	QSPIM_NO_DUPLICATION prevent frame duplication		 0/1
- *	QSPIM_AUTOMODE		 use 16Z076 automode      		 0/1
  *  M_LL_DEBUG_LEVEL     driver debug level          	 see dbg.h
  *  M_MK_IRQ_ENABLE      interrupt enable            	 0..1
  *  M_LL_IRQ_COUNT       interrupt counter           	 0..max
@@ -570,21 +481,13 @@ static int32 QSPIM_Write(
  *
  *	QSPIM_FRAMESYN: Controls the value of the FRAMESYN signal. The passed
  *		value is output on the next falling edge of the cycle timer.
- *
- *  QSPIM_NO_DUPLICATION: A value of 1 prevents frame duplication when the
- *      xmt buffer is not filled. A value of 0 (the default behaviour)
- *      transmits the last set frame data at each timer IRQ.
- *
- *	QSPIM_AUTOMODE: A value of 1 will set the 16Z076 core into automode. This
- *		means, it will start sending it's internal TXRAM content on a rising
- *		edge of SYNCLOCK, meaning it will inhibit the timer IRQ.
- *
  *---------------------------------------------------------------------------
- *  Input......:  llHdl          ll handle
- *                code           status code
- *                ch             current channel
- *                value32_or_64  data or
- *                               ptr to block data struct (M_SG_BLOCK)  (*)
+ *  Input......:  h      	 low-level handle
+ *                code       status code
+ *                ch         current channel
+ *                value      data or
+ *                           pointer to block data structure (M_SG_BLOCK)  (*)
+ *                (*) = for block status codes
  *  Output.....:  return     success (0) or error code
  *  Globals....:  ---
  ****************************************************************************/
@@ -592,11 +495,9 @@ static int32 QSPIM_SetStat(
     LL_HANDLE *h,
     int32  code,
     int32  ch,
-    INT32_OR_64 value32_or_64
+    int32  value
 )
 {
-	int32		value	= (int32)value32_or_64;	/* 32bit value     */
-	INT32_OR_64	valueP	= value32_or_64;		/* stores 32/64bit pointer */
 	int32 error = ERR_SUCCESS;
 	MACCESS ma = h->maQspi;
 
@@ -612,7 +513,6 @@ static int32 QSPIM_SetStat(
 		OSS_IRQ_STATE irqState;
 		/*--- start/stop timer and QSPI ---*/
 
-		DBGWRT_1((DBH, "LL - QSPIM_SetStat: QSPIM_TIMER_STATE\n"));
 		if( h->irqEnabled == FALSE ){
 			DBGWRT_ERR((DBH,"*** QSPIM_SetStat: irq not enabled!\n"));
 			error = ERR_LL_DEV_NOTRDY;
@@ -624,14 +524,12 @@ static int32 QSPIM_SetStat(
 				ClrRcvFifo( h );
 				h->running = TRUE;
 
-				if( !h->doAutoMode ){
 #ifndef QSPIM_D201_SW
 				MWRITE_D16( ma, QSPI_TIMER, 0 ); /* be sure timer stopped */
 #endif
 				/* clear pending timer IRQ, enable timer IRQ */
 				MSETMASK_D8( ma, QSPI_QILR, 0x2 );
 				MSETMASK_D8( ma, QSPI_QILR, 0x1 );
-				}
 
 				/* activate SYNCLK on next rising timer edge */
 				UPDATE_QPDR( h->qpdrShadow | 0x0080 );
@@ -716,11 +614,6 @@ static int32 QSPIM_SetStat(
 
 		break;
 	}
-
-	case QSPIM_NO_DUPLICATION:
-		h->noFrameDup = TRUE;
-		break;
-
 	case M_MK_IRQ_ENABLE:
 		if( value ){
 			h->irqEnabled = TRUE;
@@ -738,7 +631,7 @@ static int32 QSPIM_SetStat(
 
 	case QSPIM_BLK_CALLBACK:
 	{
-		M_SG_BLOCK *blk = (M_SG_BLOCK *)valueP;
+		M_SG_BLOCK *blk = (M_SG_BLOCK *)value;
 		QSPIM_CALLBACK_PARMS *parms;
 		OSS_IRQ_STATE irqState;
 
@@ -749,7 +642,7 @@ static int32 QSPIM_SetStat(
 		}
 		parms = (QSPIM_CALLBACK_PARMS *)blk->data;
 
-		DBGWRT_2((DBH, "QSPIM_BLK_CALLBACK: func=%08p arg=0x%x stat=0x%x\n",
+		DBGWRT_2((DBH, "QSPIM_BLK_CALLBACK: func=0x%x arg=0x%x stat=0x%x\n",
 				  parms->func, parms->arg, parms->statics ));
 
 		irqState = OSS_IrqMaskR( h->osHdl, h->irqHdl );		/* mask irqs */
@@ -765,17 +658,15 @@ static int32 QSPIM_SetStat(
 	case QSPIM_BLK_DEFINE_FRM:
 		NOT_ALLOWED_WHEN_RUNNING;
 
-		error = DefineFrm( h, (M_SG_BLOCK*)valueP);
+		error = DefineFrm( h, (M_SG_BLOCK*)value);
 		break;
 
 	case QSPIM_WOMQ:
 		NOT_ALLOWED_WHEN_RUNNING;
-        if( value ) {
-            MSETMASK_D16( ma, QSPI_SPCR0, 0x4000 );
-        }
-        else {
+		if( value )
+			MSETMASK_D16( ma, QSPI_SPCR0, 0x4000 );
+		else
 			MCLRMASK_D16( ma, QSPI_SPCR0, 0x4000 );
-        }
 		break;
 
 	case QSPIM_BITS:
@@ -792,22 +683,18 @@ static int32 QSPIM_SetStat(
 
 	case QSPIM_CPOL:
 		NOT_ALLOWED_WHEN_RUNNING;
-        if( value ) {
+		if( value )
 			MSETMASK_D16( ma, QSPI_SPCR0, 0x200 );
-        }
-        else {
+		else
 			MCLRMASK_D16( ma, QSPI_SPCR0, 0x200 );
-        }
 		break;
 
 	case QSPIM_CPHA:
 		NOT_ALLOWED_WHEN_RUNNING;
-        if( value ) {
+		if( value )
 			MSETMASK_D16( ma, QSPI_SPCR0, 0x100 );
-        }
-        else {
+		else
 			MCLRMASK_D16( ma, QSPI_SPCR0, 0x100 );
-        }
 		break;
 
 	case QSPIM_BAUD:
@@ -846,12 +733,6 @@ static int32 QSPIM_SetStat(
 		{
 			u_int32 dsclk;
 
-			if(  value == 0 ){
-				DBGWRT_ERR((DBH,"*** QSPIM: illegal dsclk %d\n", value));
-				error = ERR_LL_ILL_PARAM;
-				break;
-			}
-
 			dsclk = h->pldClock / 10000 * value / 100000;
 
 			if( (value < 1000000000/h->pldClock) || (dsclk > 128)){
@@ -873,12 +754,6 @@ static int32 QSPIM_SetStat(
 		NOT_ALLOWED_WHEN_RUNNING;
 		{
 			u_int32 dtl;
-
-			if( value == 0 ){
-				DBGWRT_ERR((DBH,"*** QSPIM: illegal dtl %d\n", value));
-				error = ERR_LL_ILL_PARAM;
-				break;
-			}
 
 			dtl = h->pldClock / 10000 * value / 3200000;
 
@@ -940,40 +815,6 @@ static int32 QSPIM_SetStat(
 		error = CreateRcvFifo( h, value );
 		break;
 
-	case QSPIM_BLOCKING_READ:
-		h->doBlockRead = value;
-		break;
-
-	case QSPIM_AUTOMODE:
-		if (value == 1) {
-			OSS_IRQ_STATE irqState;
-			u_int8 qilr;
-
-			irqState = OSS_IrqMaskR( h->osHdl, h->irqHdl );		/* mask irqs */
-			qilr = MREAD_D8( h->maQspi, QSPI_QILR );
-			qilr |= 0x80;		/* Set Automode */
-			qilr &= ~0x01; 		/* Disable the QSPI Timer */
-			MWRITE_D8( h->maQspi, QSPI_QILR, qilr  );
-
-			/* Activate SYNCLK */
-			UPDATE_QPDR( h->qpdrShadow | 0x0080 );
-			MSETMASK_D16(ma, QSPI_SPCR2, 0x8000 ); 	/* set SPIFIE */
-
-			OSS_IrqRestore( h->osHdl, h->irqHdl, irqState );	/* unmask irqs */
-		}
-		else {
-			OSS_IRQ_STATE irqState;
-			u_int8 qilr;
-
-			irqState = OSS_IrqMaskR( h->osHdl, h->irqHdl );		/* mask irqs */
-			qilr = MREAD_D8( h->maQspi, QSPI_QILR );
-			qilr &= ~0x80;
-			MWRITE_D8( h->maQspi, QSPI_QILR, qilr  );
-			OSS_IrqRestore( h->osHdl, h->irqHdl, irqState );	/* unmask irqs */
-		}
-
-		h->doAutoMode = value;			
-		break;
 	case M_LL_DEBUG_LEVEL: h->dbgLevel = value; break;
 	case M_LL_IRQ_COUNT:   h->irqCount = value; break;
 
@@ -1040,14 +881,14 @@ static int32 QSPIM_SetStat(
  *
  *	Rest of getstats correspond to the setstats with the same name
  *---------------------------------------------------------------------------
- *  Input......:  llHdl           ll handle
- *                code            status code
- *                ch              current channel
- *                value32_or_64P  ptr to block data struct (M_SG_BLOCK)  (*)
+ *  Input......:  h      	 low-level handle
+ *                code       status code
+ *                ch         current channel
+ *                valueP     pointer to block data structure (M_SG_BLOCK)  (*)
  *                (*) = for block status codes
- *  Output.....:  value32_or_64P  data ptr or
- *                                ptr to block data struct (M_SG_BLOCK)  (*)
- *                return          success (0) or error code
+ *  Output.....:  valueP     data ptr or
+ *                           pointer to block data structure (M_SG_BLOCK)  (*)
+ *                return     success (0) or error code
  *                (*) = for block status codes
  *  Globals....:  ---
  ****************************************************************************/
@@ -1055,12 +896,9 @@ static int32 QSPIM_GetStat(
     LL_HANDLE *h,
     int32  code,
     int32  ch,
-    INT32_OR_64 *value32_or_64P
+    int32  *valueP
 )
 {
-	int32 *valueP		  = (int32*)value32_or_64P;	/* pointer to 32bit value  */
-	INT32_OR_64	*value64P = value32_or_64P;		 	/* stores 32/64bit pointer  */
-	/* M_SG_BLOCK	*blk	  = (M_SG_BLOCK*)value32_or_64P;  stores block struct pointer */
 	MACCESS ma = h->maQspi;
 
 	int32 error = ERR_SUCCESS;
@@ -1088,7 +926,7 @@ static int32 QSPIM_GetStat(
 
 	case QSPIM_BLK_DIRECT_WRITE_FUNC:
 	{
-		M_SG_BLOCK *blk = (M_SG_BLOCK *)value64P;
+		M_SG_BLOCK *blk = (M_SG_BLOCK *)valueP;
 		QSPIM_DIRECT_WRITE_PARMS *parms;
 
 		if( blk->size != sizeof(QSPIM_DIRECT_WRITE_PARMS)){
@@ -1106,7 +944,7 @@ static int32 QSPIM_GetStat(
 
 	case QSPIM_BLK_DIRECT_ISETSTAT_FUNC:
 	{
-		M_SG_BLOCK *blk = (M_SG_BLOCK *)value64P;
+		M_SG_BLOCK *blk = (M_SG_BLOCK *)valueP;
 		QSPIM_DIRECT_ISETSTAT_PARMS *parms;
 
 		if( blk->size != sizeof(QSPIM_DIRECT_ISETSTAT_PARMS)){
@@ -1178,23 +1016,16 @@ static int32 QSPIM_GetStat(
 		*valueP = h->rcvFifoDepth;
 		break;
 
-	case QSPIM_BLOCKING_READ:
-		*valueP = h->doBlockRead;
-		break;
-
-	case QSPIM_AUTOMODE:
-		*valueP = h->doAutoMode;
-		break;
     /*--------------------------+
 	|  Misc                     |
 	+--------------------------*/
-	case M_LL_DEBUG_LEVEL:	*valueP = h->dbgLevel;				        break;
-	case M_LL_CH_NUMBER:    *valueP = CH_NUMBER;					    break;
-	case M_LL_CH_DIR:		*valueP = M_CH_INOUT;					    break;
-	case M_LL_CH_LEN:       *valueP = 16;							    break;
-	case M_LL_CH_TYP:		*valueP = M_CH_BINARY;					    break;
-	case M_LL_IRQ_COUNT:	*valueP = h->irqCount;				        break;
-	case M_MK_BLK_REV_ID:	*value64P = (INT32_OR_64)&h->idFuncTbl;		break;
+	case M_LL_DEBUG_LEVEL:	*valueP = h->dbgLevel;				break;
+	case M_LL_CH_NUMBER:    *valueP = CH_NUMBER;					break;
+	case M_LL_CH_DIR:		*valueP = M_CH_INOUT;					break;
+	case M_LL_CH_LEN:       *valueP = 16;							break;
+	case M_LL_CH_TYP:		*valueP = M_CH_BINARY;					break;
+	case M_LL_IRQ_COUNT:	*valueP = h->irqCount;				break;
+	case M_MK_BLK_REV_ID:	*valueP = (int32)&h->idFuncTbl;		break;
 
 	default:
 		/*--------------------------+
@@ -1239,37 +1070,11 @@ static int32 QSPIM_BlockRead(
 {
     DBGWRT_1((DBH, "LL - QSPIM_BlockRead: ch=%d, size=%d\n",ch,size));
 
-	if ( h->doBlockRead ) {
-		int32 error;
-
-		error = OSS_SemWait(h->osHdl, h->readSemHdl, OSS_SEM_WAITFOREVER);
-		if( error ) {
-			DBGWRT_ERR((DBH,
-						"*** QSPIM_BlockRead: Error waiting for Semaphore %d\n",
-						error));
-			return ERR_LL_READ;
-		}
-#ifdef QSPIM_SUPPORT_A21_DMA
-		/* If we're using the blocking read mode in combination with the batch
-		 * DMA, we do not take the detour and use the receive FIFOs, but try to
-		 * get the data out of the driver as fast as possible without
-		 * introducing additional receive latencys. That's not quite zero-copy
-		 * but we're getting near to that.
-		 */
-		CopyBlock( (u_int32 *)h->recvBuf, (u_int32 *)buf, h->frmLen );
-		*nbrRdBytesP = h->frmLen;
-		return ERR_SUCCESS;
-#endif
-		
-	}
-
 	if( h->errors & QSPIM_ERR_RCV_FIFO_OVER ){
 		*nbrRdBytesP = 0;
 		DBGWRT_ERR((DBH,"*** QSPIM_BlockRead: FIFO overrun pending\n"));
-
 		return ERR_LL_READ;
 	}
-
 	if( h->rcvFifoCount == 0 ){
 		/*--- FIFO empty ---*/
 		DBGWRT_3((DBH," no entries in fifo\n"));
@@ -1383,87 +1188,6 @@ static int32 DirectISetstat(
 	return(error);
 }
 
-#define OUT(hw,mem) (void)((*(volatile u_int32 *) (hw)) = (mem))
-
-#define MBLOCK_WRITE_BE32(ma,offs,size,src)	\
-  { int sz=size>>2;							\
-    u_int32 *mem=(u_int32 *)src;			\
-    unsigned long hw = (unsigned long)(ma)+(offs)+_MAC_OFF_;	\
-    while(sz--){							\
-      OUT(hw,QSPISWAP(*mem));				\
-      mem++;								\
-      hw += 4;								\
-    }										\
-  }
-
-/****************************** QSPIM_DirectCopy *****************************
- *
- *  Description:  Write QSPI frame into FPGA internal buffer
- *
- *  Always non blocking.
- *
- *  The buffered frame will then be transferred to the QSPI slaves on the next
- *  cycle. It also copies the frame into the xmtBuf and sets it's state to
- *  XMT_FILLED. This is needed in automode to be able to 
- *
- *  <buf> must have the same format as the QSPI transmit RAM.
- *  <size> must have exactly the number of bytes of the QSPI frame
- *---------------------------------------------------------------------------
- *  Input......:  h        	   low-level handle
- *                buf          data buffer
- *                size         data buffer size (bytes)
- *  Output.....:  nbrWrBytesP  number of written bytes
- *                return       success (0) or error code
- *							   ERR_LL_WRITE: Write occured during transmission
- *							   ERR_LL_USERBUF: buffer size didn't match
- *  Globals....:  ---
- ****************************************************************************/
-static int32 QSPIM_DirectCopy(
-     LL_HANDLE *h,
-     void      *buf,
-     int32     size,
-     int32     *nbrWrBytesP
-)
-{
-	u_int16 spcr1;
-
-    DBGWRT_1((DBH, "LL - QSPIM_DirectCopy: size=%d\n",size));
-
-	spcr1 = MREAD_D16( h->maQspi, QSPI_SPCR1);
-	if ( spcr1 & 0x8000 ) {
-		DBGWRT_ERR((DBH, "LL - QSPIM_DirectCopy: QSPI already running"));
-		return ERR_LL_WRITE;
-	}
-
-	if( size != h->frmLen ){
-		DBGWRT_ERR((DBH,"*** QSPIM_DirectCopy: wrong size %d, frmLen=%d\n",
-					size, h->frmLen ));
-		return ERR_LL_USERBUF;
-	}
-
-	/* return number of written bytes */
-	*nbrWrBytesP = size;
-
-	IDBGDMP_3((DBH,"Send Data",(void*)buf,h->frmLen,2));
-	/*--- copy the application buffer to the QSPI transmit RAM ---*/
-	MBLOCK_WRITE_BE32( h->maQspi, QSPI_ETRANRAM,
-					  (h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
-					  buf );
-
-	spcr1 = MREAD_D16( h->maQspi, QSPI_SPCR1);
-	if ( spcr1 & 0x8000 ) {
-		DBGWRT_ERR((DBH, "LL - QSPIM_DirectCopy: QSPI running before setting NEWQP"));
-		return ERR_LL_WRITE;
-	}
-
-	/* set NEWQP to 0 */
-	MWRITE_D8(h->maQspi, QSPI_SPCR4, 0x00 );
-
-	/* Do double buffering magic */
-	h->xmtBufState = XMT_DOUBLE;
-
-	return ERR_SUCCESS;
-}
 /****************************** QSPIM_BlockWrite *****************************
  *
  *  Description:  Write QSPI frame into driver internal buffer
@@ -1495,21 +1219,6 @@ static int32 QSPIM_BlockWrite(
 )
 {
     DBGWRT_1((DBH, "LL - QSPIM_BlockWrite: ch=%d, size=%d\n",ch,size));
-	/*
-	 * if automode is active, the timer is not started yet and the xmtBuf is
-	 * empty, then copy directly into ETRANRAM and not into internal buffer.
-	 */
-	if( !h->running && h->doAutoMode && h->xmtBufState == XMT_EMPTY ){
-		return QSPIM_DirectCopy(h, buf, size, nbrWrBytesP);
-	}
-
-	/* If we're in double buffering state then set the xmtBufState to empty and
-	 * write to xmtBuf
-	 */
-	if( h->xmtBufState == XMT_DOUBLE ) {
-		DBGWRT_1((DBH, "LL - QSPIM_BlockWrite: 2nd BlockWrite and double buffering\n")); 
-		h->xmtBufState = XMT_EMPTY;
-	}
 
 	/*
 	 * if buffer has already been filled in this cycle return error
@@ -1572,8 +1281,6 @@ static int32 QSPIM_Irq(
 )
 {
 	MACCESS ma = h->maQspi;
-	u_int8	doTransfer = TRUE;
-	u_int8 qspi_spsr;
 
     if( MREAD_D8( ma, QSPI_QILR ) & 0x2 ) {	/* timer IRQ pending? */
 		/*------------+
@@ -1582,25 +1289,18 @@ static int32 QSPIM_Irq(
 		IDBGWRT_1((DBH, ">>> QSPIM_Irq: Timer\n"));
 
 		h->irqCount++;
-		MCLRMASK_D8( ma, QSPI_QILR, 0x1 );  /* disable timer IRQ */
 		MSETMASK_D8( ma, QSPI_QILR, 0x2 ); /* service timer IRQ */
 
 		/*--- copy the driver buffer to the QSPI transmit RAM ---*/
 		if( h->xmtBufState == XMT_FILLED ){
-#ifdef QSPIM_SUPPORT_8240_DMA
+#ifdef QSPIM_USE_DMA
 			__DMA_Transfer( h, h->xmtBuf, (char *)ma + QSPI_ETRANRAM,
-							(h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen), 1 );
+							h->frmLen&0x3 ? h->frmLen+4 : h->frmLen, 1 );
 #else
-#ifdef QSPIM_Z076
-			MBLOCK_WRITE_D16( ma, QSPI_ETRANRAM,
-							  h->frmLen&0x1 ? h->frmLen+1 : h->frmLen,
-							  (u_int16*)h->xmtBuf );
-#else
-            MBLOCK_WRITE_D32( ma, QSPI_ETRANRAM,
-                              (h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
-                              h->xmtBuf );
-#endif /* QSPIM_Z076 */
-#endif /* QSPIM_SUPPORT_8240_DMA */
+			MBLOCK_WRITE_D32( ma, QSPI_ETRANRAM,
+							  h->frmLen&0x3 ? h->frmLen+4 : h->frmLen,
+							  h->xmtBuf );
+#endif
 			IDBGDMP_3((DBH,"Send Data",(void*)h->xmtBuf,h->frmLen,2));
 		}
 		else {
@@ -1610,36 +1310,19 @@ static int32 QSPIM_Irq(
 
 			if( h->emgSig )
 				OSS_SigSend( h->osHdl, h->emgSig );
-
-			/* prevent frame duplication? */
-			if( h->noFrameDup )
-				doTransfer = FALSE;
 		}
 		h->xmtBufState = XMT_EMPTY; /* buffer no longer filled */
 
-		if( doTransfer ){
-			/*--- start QSPI transfer ---*/
-#ifdef QSPIM_Z076
-			MWRITE_D8(ma, QSPI_SPCR4, 0x00 );		/* clr NEWQP */
-#else
-			MWRITE_D8(ma, QSPI_SPCR4 + 1, 0x00 );	/* clr NEWQP */
-#endif /* QSPIM_Z076 */
-			MSETMASK_D16( ma, QSPI_SPCR1, 0x8000 );	/* set SPE */
-		}
+		/*--- start QSPI transfer ---*/
+		MWRITE_D8(ma, QSPI_SPCR4+1, 0x00 ); 	/* clr NEWQP */
+		MSETMASK_D16( ma, QSPI_SPCR1, 0x8000 );	/* set SPE */
 
-		MSETMASK_D8( ma, QSPI_QILR, 0x1 );  /* disable timer IRQ */
+
 		return LL_IRQ_DEVICE;
 
 
-	} else if( (qspi_spsr = MREAD_D8( ma, QSPI_SPSR)) & 0x80 ) { /* SPIF set? */
+	} else if( MREAD_D8( ma, QSPI_SPSR) & 0x80 ) { /* SPIF set? */
 		u_int8 *copyBuf;
-		u_int8 rtv;
-
-#ifdef GPIO_DEBUG
-		/* JT 22-01-2015 */
-		UPDATE_QPDR(h->qpdrShadow | (1 << 6) );
-		/* JT 22-01-2015 */
-#endif	/* GPIO_DEBUG */
 		/*------------+
 		|  QSPI IRQ   |
 		+------------*/
@@ -1667,34 +1350,14 @@ static int32 QSPIM_Irq(
 
 		}
 		/*--- copy QSPI receive RAM to receive fifo or overrun buffer---*/
-#if defined(QSPIM_SUPPORT_8240_DMA)  
+#ifdef QSPIM_USE_DMA
 	    __DMA_Transfer( h, (char *)ma + QSPI_ERECRAM, copyBuf,
-						(h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen), 2 );
-#elif defined (QSPIM_SUPPORT_A21_DMA)
-		if( h->xmtBufState == XMT_FILLED ){
-			__DMA_Transfer( h );
-			MWRITE_D8(ma, QSPI_SPCR4, 0x00 );		/* clear NEWQP */
-			h->xmtBufState = XMT_EMPTY;
-			IDBGDMP_1((DBH, "Recv Data", (void*)h->recvBuf, h->frmLen, 2));
-			/* We don't use the rcvFifo so reset the size */
-			h->rcvFifoCount = 0;
-		}
-		else {
-			if( h->emgSig ){
-				OSS_SigSend( h->osHdl, h->emgSig );
-			}
-		}
-#else  /* QSPIM_SUPPORT_8240_DMA || QSPIM_SUPPORT_A21_DMA */
-#ifdef QSPIM_Z076
-		MBLOCK_READ_D16( ma, QSPI_ERECRAM,
-							 h->frmLen&0x1 ? h->frmLen+1 : h->frmLen,
-							 (u_int16 *)copyBuf );
+						h->frmLen&0x3 ? h->frmLen+4 : h->frmLen, 2 );
 #else
-        MBLOCK_READ_D32( ma, QSPI_ERECRAM,
-                             (h->frmLen & 0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
-                             copyBuf );
-#endif /* QSPIM_Z076 */
-#endif /* QSPIM_SUPPORT_8240_DMA */
+		MBLOCK_READ_D32( ma, QSPI_ERECRAM,
+							 h->frmLen&0x3 ? h->frmLen+4 : h->frmLen,
+							 copyBuf );
+#endif
 
 		IDBGDMP_3((DBH,"Recv Data",(void*)copyBuf,h->frmLen,2));
 		/*--- call the application's callback routine if installed ---*/
@@ -1702,7 +1365,7 @@ static int32 QSPIM_Irq(
 #if defined(OS9000)
 			void *oldStat = change_static( h->callbackStatics );
 #endif
-			IDBGWRT_2((DBH," call callback func=%08p arg=0x%x stat=0x%x\n",
+			IDBGWRT_2((DBH," call callback func=0x%x arg=0x%x stat=0x%x\n",
 					   h->callbackFunc, h->callbackArg, h->callbackStatics ));
 
 			h->callbackFunc( h->callbackArg, (u_int16 *)copyBuf, h->frmLen );
@@ -1715,23 +1378,6 @@ static int32 QSPIM_Irq(
 		if( h->frmSig ){
 			OSS_SigSend( h->osHdl, h->frmSig );
 		}
-		/* Check for Realtime Violation Bit */
-		rtv = !!(qspi_spsr & QSPIM_RTV);
-
-		/*--- Wake up read function if needed ---*/
-		if ( h->doBlockRead ) {
-			IDBGWRT_3((DBH, " >>> Wakeup read function\n"));
-			OSS_SemSignal(h->osHdl, h->readSemHdl);
-		}
-		/*--- Check if Realtime violation bit is set by core ---*/
-		if( h->emgSig && rtv )
-			OSS_SigSend( h->osHdl, h->emgSig );
-
-#ifdef GPIO_DEBUG
-		/* JT 22-01-2015 */
-		UPDATE_QPDR(h->qpdrShadow & ~(1 << 6) );
-		/* JT 22-01-2015 */
-#endif	/* GPIO_DEBUG */
 
 		return LL_IRQ_DEVICE;
 	}
@@ -1834,23 +1480,11 @@ static int32 QSPIM_Info(
 
 			case 1:
 #endif
-				/*--- 16Z076 QSPIM ---*/
-				*addrModeP = MDIS_MA_CHAMELEON;
-				*dataModeP = MDIS_MD_CHAM_0;
+				/*--- QSPI regs ---*/
+				*addrModeP = MDIS_MA24;
+				*dataModeP = MDIS_MD08 | MDIS_MD16 | MDIS_MD32;
 				*addrSizeP = 0x800;
 				break;
-#ifdef QSPIM_SUPPORT_A21_DMA
-			case 1:	/* 16Z062 DMA */
-				*addrModeP = MDIS_MA_CHAMELEON;
-				*dataModeP = MDIS_MD_CHAM_1;
-				*addrSizeP = ADDR_SIZE_SPC_1;
-				break;
-			case 2:	/* 16Z024_SRAM */
-				*addrModeP = MDIS_MA_CHAMELEON;
-				*dataModeP = MDIS_MD_CHAM_2;
-				*addrSizeP = ADDR_SIZE_SPC_2;
-				break;
-#endif
 			default:
 				error = ERR_LL_ILL_PARAM;
 			}
@@ -1898,7 +1532,7 @@ static int32 QSPIM_Info(
  ****************************************************************************/
 static char* Ident( void )	/* nodoc */
 {
-    return( "QSPIM - QSPIM low level driver: $Id: qspim_drv.c,v 2.7 2015/02/19 11:56:46 ts Exp $" );
+    return( "QSPIM - QSPIM low level driver: $Id: qspim_drv.c,v 2.2 2006/03/01 20:49:14 cs Exp $" );
 }
 
 /********************************* Cleanup **********************************
@@ -1920,10 +1554,6 @@ static int32 Cleanup(
 {
 
 	FreeRcvFifo( h );			/* free receive fifo */
-#ifdef QSPIM_SUPPORT_A21_DMA
-	if( h->recvBuf != NULL )
-		OSS_MemFree( h->osHdl, (void *)h->recvBuf, h->recvAlloc );
-#endif
 
 	if( h->xmtBuf != NULL )
 		OSS_MemFree( h->osHdl, (void *)h->xmtBuf, h->xmtAlloc );
@@ -1932,9 +1562,6 @@ static int32 Cleanup(
 		OSS_SigRemove(h->osHdl, &h->frmSig );
 	if( h->emgSig )
 		OSS_SigRemove(h->osHdl, &h->emgSig );
-
-	if( h->readSemHdl )
-		OSS_SemRemove(h->osHdl, &h->readSemHdl);
 
 	/* clean up desc */
 	if (h->descHdl)
@@ -1968,11 +1595,7 @@ static int32 Cleanup(
 static void FreeRcvFifo( LL_HANDLE *h )	/* nodoc */
 {
 	if( h->rcvFifoStart != NULL){
-#if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
-		kfree(h->rcvFifoStart);
-#else
 		OSS_MemFree( h->osHdl, (void *)h->rcvFifoStart, h->rcvFifoAlloc );
-#endif
 
 		h->rcvFifoStart = h->rcvFifoEnd = h->rcvFifoNxtIn =
 			h->rcvFifoNxtOut = NULL;
@@ -2004,12 +1627,8 @@ static int32 CreateRcvFifo( LL_HANDLE *h, int32 depth )	/* nodoc */
 	/*--- allocate memory for fifo ---*/
 	size = h->qspiQueueLen * 2 * depth;
 
-#if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
-	h->rcvFifoStart = kmalloc(size, GFP_DMA | GFP_KERNEL);
-#else
-	h->rcvFifoStart = (u_int8 *)OSS_MemGet( h->osHdl, size, &h->rcvFifoAlloc );
-#endif
-	if( h->rcvFifoStart == NULL ){
+	if( (h->rcvFifoStart =
+		 (u_int8 *)OSS_MemGet( h->osHdl, size, &h->rcvFifoAlloc )) == NULL ){
 
 		DBGWRT_ERR((DBH,"*** QSPIM:CreateRcvFifo: couldn't alloc %d bytes\n",
 					size ));
@@ -2127,9 +1746,6 @@ static int32 DefineFrm( LL_HANDLE *h, M_SG_BLOCK *blk )	/* nodoc */
 
 	/*--- setup the endq pointer ---*/
 	MWRITE_D16( ma, QSPI_SPCR4, (cmdOff-1)<<8 );
-#ifdef QSPIM_SUPPORT_A21_DMA
-	__DMA_UpdateSize( h );
-#endif
 
 	return 0;
 }
@@ -2162,3 +1778,5 @@ static void CopyBlock( u_int32 *src, u_int32 *dst, u_int32 n ) /* nodoc */
 			*dst8++ = *src8++;
 	}
 }
+
+

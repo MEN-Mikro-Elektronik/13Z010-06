@@ -5,8 +5,8 @@
  ****************************************************************************
  *
  *       Author: kp
- *        $Date: 2014/07/21 16:04:46 $
- *    $Revision: 1.6 $
+ *        $Date: 2006/03/01 20:49:26 $
+ *    $Revision: 1.2 $
  *
  *  Description: Example program for the QSPIM driver
  *				 To be used with A4N card and special connection.
@@ -30,23 +30,6 @@
  *-------------------------------[ History ]---------------------------------
  *
  * $Log: qspim_a4n.c,v $
- * Revision 1.6  2014/07/21 16:04:46  ts
- * R: warning about different size at pointer/integer cast
- * M: cast to INT_32_OR_64 instead int32
- *
- * Revision 1.5  2010/05/10 14:21:22  amorbach
- * R: APB build failed
- * M: 1. variable type path changed to MDIS_PATH
- *    2. data type of variable i changed to u_int16
- *
- * Revision 1.4  2010/05/06 10:58:56  amorbach
- * R: Porting to MDIS5
- * M: added support for 64bit (MDIS_PATH)
- *
- * Revision 1.3  2010/03/23 11:41:04  apb
- * R: 1. not compilable with current implementation of UOS_Sig
- * M: 1. add __MAPILIB macro to declaration and implementation of SigHandler
- *
  * Revision 1.2  2006/03/01 20:49:26  cs
  * cosmetics for MDIS4/2004 compliancy
  *
@@ -54,10 +37,10 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
+ * (c) Copyright 2000 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
 
-static const char RCSid[]="$Id: qspim_a4n.c,v 1.6 2014/07/21 16:04:46 ts Exp $";
+static const char RCSid[]="$Id: qspim_a4n.c,v 1.2 2006/03/01 20:49:26 cs Exp $";
 
 #include <stdio.h>
 #include <string.h>
@@ -86,7 +69,7 @@ static const char RCSid[]="$Id: qspim_a4n.c,v 1.6 2014/07/21 16:04:46 ts Exp $";
 /*--------------------------------------+
 |   GLOBALS                             |
 +--------------------------------------*/
-static MDIS_PATH G_path;
+static int32 G_path;
 static u_int16 G_rxFrmBuf[256], G_txFrmBuf[256];
 static int32 G_frmSize;
 static u_int32 G_xmtErrors;
@@ -99,7 +82,7 @@ static u_int32 G_endMe;
 |   PROTOTYPES                          |
 +--------------------------------------*/
 static void PrintError(char *info);
-static void __MAPILIB SigHandler(u_int32 sigCode);
+static void SigHandler(u_int32 sigCode);
 
 
 /********************************* main *************************************
@@ -114,8 +97,7 @@ static void __MAPILIB SigHandler(u_int32 sigCode);
 int main(int argc, char *argv[])
 {
 	M_SG_BLOCK blk;
-	MDIS_PATH	path;
-	u_int16 i;
+	int32	path, i;
 	char	*device;
 	u_int16 defFrm[2];
 
@@ -180,7 +162,7 @@ int main(int argc, char *argv[])
 	defFrm[1] = 0xf104;			/* slave 1 */
 
 
-	if( M_setstat(path, QSPIM_BLK_DEFINE_FRM, (INT32_OR_64)&blk )) goto abort;
+	if( M_setstat(path, QSPIM_BLK_DEFINE_FRM, (int32)&blk )) goto abort;
 
 	/*
 	 * Fill the tx frame buffer with some data
@@ -258,7 +240,7 @@ cleanup:
  *  Output.....:
  *  Globals....: -
  ****************************************************************************/
-static void __MAPILIB SigHandler(u_int32 sigCode)
+static void SigHandler(u_int32 sigCode)
 {
 	int32 size, i;
 
@@ -302,4 +284,3 @@ static void PrintError(char *info)
 {
 	printf("*** can't %s: %s\n", info, M_errstring(UOS_ErrnoGet()));
 }
-

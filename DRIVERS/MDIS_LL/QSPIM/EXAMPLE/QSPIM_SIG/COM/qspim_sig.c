@@ -5,8 +5,8 @@
  ****************************************************************************
  *
  *       Author: kp
- *        $Date: 2014/07/21 16:05:27 $
- *    $Revision: 1.7 $
+ *        $Date: 2006/03/01 20:49:30 $
+ *    $Revision: 1.3 $
  *
  *  Description: Example program for the QSPIM driver
  *				 Uses the signal mode
@@ -17,24 +17,6 @@
  *-------------------------------[ History ]---------------------------------
  *
  * $Log: qspim_sig.c,v $
- * Revision 1.7  2014/07/21 16:05:27  ts
- * R: warning about different size at pointer/integer cast
- * M: cast to INT_32_OR_64 instead int32
- *
- * Revision 1.6  2010/05/10 14:21:27  amorbach
- * R: APB build failed
- * M: variable type path changed to MDIS_PATH
- *
- * Revision 1.5  2010/05/06 10:57:07  amorbach
- * R: Porting to MDIS5
- * M: added support for 64bit (MDIS_PATH)
- *
- * Revision 1.4  2010/03/23 11:43:23  apb
- * R: 1. not compilable with current implementation of UOS_Sig
- *    2. build warnings because of type incompatibilities
- * M: 1. added __MAPILIB macro to declaration and implementation of SigHandler
- *    2. fixed types in main and FillFrame()
- *
  * Revision 1.3  2006/03/01 20:49:30  cs
  * cosmetics for MDIS4/2004 compliancy
  *
@@ -46,10 +28,10 @@
  * Initial Revision
  *
  *---------------------------------------------------------------------------
- * (c) Copyright 2010 by MEN mikro elektronik GmbH, Nuernberg, Germany
+ * (c) Copyright 2000 by MEN mikro elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
 
-static const char RCSid[]="$Id: qspim_sig.c,v 1.7 2014/07/21 16:05:27 ts Exp $";
+static const char RCSid[]="$Id: qspim_sig.c,v 1.3 2006/03/01 20:49:30 cs Exp $";
 
 #include <stdio.h>
 #include <string.h>
@@ -76,7 +58,7 @@ static const char RCSid[]="$Id: qspim_sig.c,v 1.7 2014/07/21 16:05:27 ts Exp $";
 /*--------------------------------------+
 |   GLOBALS                             |
 +--------------------------------------*/
-static MDIS_PATH G_path;
+static int32 G_path;
 static u_int16 G_rxFrmBuf[256], G_txFrmBuf[256];
 static int32 G_frmSize;
 static u_int32 G_xmtErrors;
@@ -93,7 +75,7 @@ static u_int32 G_endMe;
 +--------------------------------------*/
 static void FillFrame( int32 frameNum );
 static void PrintError(char *info);
-static void __MAPILIB SigHandler(u_int32 sigCode);
+static void SigHandler(u_int32 sigCode);
 
 
 /********************************* main *************************************
@@ -108,8 +90,7 @@ static void __MAPILIB SigHandler(u_int32 sigCode);
 int main(int argc, char *argv[])
 {
 	M_SG_BLOCK blk;
-	MDIS_PATH path;
-	u_int8 i;
+	int32	path,i;
 	char	*device;
 	u_int16 defFrm[16];
 
@@ -167,7 +148,7 @@ int main(int argc, char *argv[])
 	for(i=0; i<16; i++ )
 		defFrm[i] = 0xd004 | (i<<8);
 
-	if( M_setstat(path, QSPIM_BLK_DEFINE_FRM, (INT32_OR_64)&blk )) goto abort;
+	if( M_setstat(path, QSPIM_BLK_DEFINE_FRM, (int32)&blk )) goto abort;
 
 	/*
 	 * Fill the tx frame buffer with some data
@@ -244,10 +225,10 @@ cleanup:
  ****************************************************************************/
 static void FillFrame( int32 frameNum )
 {
-	u_int16 i;
+	int32 i;
 
 	for(i=0; i<G_frmSize/2; i++ )
-		G_txFrmBuf[i] = (u_int16) frameNum+i;
+		G_txFrmBuf[i] = frameNum+i;
 }
 
 /********************************* SigHandler ********************************
@@ -260,7 +241,7 @@ static void FillFrame( int32 frameNum )
  *  Output.....: -
  *  Globals....: G_xxx
  ****************************************************************************/
-static void __MAPILIB SigHandler(u_int32 sigCode)
+static void SigHandler(u_int32 sigCode)
 {
 	int32 size, i;
 
@@ -308,4 +289,3 @@ static void PrintError(char *info)
 {
 	printf("*** can't %s: %s\n", info, M_errstring(UOS_ErrnoGet()));
 }
-

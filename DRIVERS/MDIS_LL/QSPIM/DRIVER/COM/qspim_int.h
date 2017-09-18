@@ -3,8 +3,8 @@
  *         Name: qspim_int.h
  *
  *       Author: kp
- *        $Date: 2015/02/19 11:56:57 $
- *    $Revision: 2.6 $
+ *        $Date: 2006/03/01 20:49:16 $
+ *    $Revision: 2.1 $
  *
  *  Description: Internal header file for the QSPIM driver
  *
@@ -13,27 +13,6 @@
  *-------------------------------[ History ]---------------------------------
  *
  * $Log: qspim_int.h,v $
- * Revision 2.6  2015/02/19 11:56:57  ts
- * R: changes in QSPI core on customer request
- * M: built in direct QSPI mode, auto mode, DMA transfer
- *
- * Revision 2.5  2014/08/26 15:15:30  jt
- * R: Build warning caused by type mismatch
- * M: Corrected types
- *
- * Revision 2.4  2014/08/26 13:53:58  jt
- * R: It was not possible to use blocking I/O on driver's read
- * M: Implement blocking read functionallity
- *
- * Revision 2.3  2012/03/12 13:55:05  dpfeuffer
- * R: QSPIM_BC02 example application for AE57
- * M: noFrameDup param added to LL_HANDLE
- *
- * Revision 2.2  2010/04/30 15:08:14  ag
- * R:1. Driver didn’t work on little-endian platforms.
- * M:1. Adapted register layout because swapping was removed in FPGA.
- * ATTENTION: For EM1A now driver_z76_em1a(_sw).mak must be used.
- *
  * Revision 2.1  2006/03/01 20:49:16  cs
  * removed getTimeBase() prototype
  * only include pld_load.h for D201 variant
@@ -88,10 +67,6 @@
 
 #ifdef QSPIM_D201_SW
 # define ADDRSPACE_COUNT		2		/* nr of required address spaces */
-#endif
-
-#if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
-# define ADDRSPACE_COUNT		3		/* nr of required address spaces */
 #else
 # define ADDRSPACE_COUNT		1		/* nr of required address spaces */
 #endif
@@ -99,8 +74,6 @@
 #define DBG_MYLEVEL			h->dbgLevel
 #define DBH					h->dbgHdl
 
-#define ADDR_SIZE_SPC_1    		0x100
-#define ADDR_SIZE_SPC_2    		0x100
 /* GET_PARAM - get parameter from descriptor */
 #define GET_PARAM(key,def,var)\
 		if ((error = DESC_GetUInt32(h->descHdl, (def), \
@@ -114,7 +87,7 @@
  if( h->running ) { error = ERR_LL_DEV_BUSY; break; }
 
 /*--- QSPI regs ---*/
-#if defined QSPIM_D201_SW
+#ifdef QSPIM_D201_SW
 /*---- D201 implementation of QSPI (16 bit register structure) ---*/
 # define QSPI_QMCR		0x0000	/* (w) */
 # define QSPI_QILR 		0x0002	/* (b) ????? offset in orginial QSPI: 4 */
@@ -129,23 +102,6 @@
 # define QSPI_SPCR2		0x001C  /* (w) */
 # define QSPI_SPCR3		0x001E	/* (b) */
 # define QSPI_SPSR		0x001F	/* (b) */
-# define QSPI_SPCR4		0x0020	/* (w) */
-
-#elif defined QSPIM_Z076
-/* Z076 implementation of QSPI ---*/
-# define QSPI_QMCR		0x0000	/* (w) */
-# define QSPI_QILR 		0x0005	/* (b) */
-# define QSPI_QIVR 		0x0004	/* (b) */
-# define QSPI_TIMER		0x0010	/* (w) cycle timer period register */
-/* note: the following long-word is differently swapped */
-# define QSPI_QPDR		0x0016	/* (w) */
-# define QSPI_QPAR		0x0015	/* (b) */
-# define QSPI_QDDR		0x0014	/* (b) */
-# define QSPI_SPCR0		0x0018  /* (w) */
-# define QSPI_SPCR1		0x001A  /* (w) */
-# define QSPI_SPCR2		0x001C  /* (w) */
-# define QSPI_SPCR3		0x001F	/* (b) */
-# define QSPI_SPSR		0x001E	/* (b) */
 # define QSPI_SPCR4		0x0020	/* (w) */
 
 #else
@@ -164,7 +120,6 @@
 # define QSPI_SPCR3		0x001C	/* (b) */
 # define QSPI_SPSR		0x001D	/* (b) */
 # define QSPI_SPCR4		0x0022	/* (w) */
-
 #endif
 
 
@@ -182,14 +137,11 @@
 #define XMT_EMPTY	0
 #define XMT_FILLING	1
 #define XMT_FILLED	2
-#define XMT_DOUBLE	3
 
 /*--- QPDR shadow update ---*/
 #define UPDATE_QPDR( val ) \
 { h->qpdrShadow = val; MWRITE_D16( h->maQspi, QSPI_QPDR, h->qpdrShadow ); }
 
-/*--- Real-Time violation bit in QSPI_SPSR ---*/
-#define QSPIM_RTV (1 << 4)
 
 /*-----------------------------------------+
 |  TYPEDEFS                                |
@@ -205,13 +157,7 @@ typedef struct {
     MACCESS         maPlx;          /* hw access handle (PLX) */
 #endif
     MACCESS         maQspi;         /* hw access handle (QSPI) */
-
-#if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
-	MACCESS         maDMA;         /* hw access handle (Z62 DMA) */
-	MACCESS         maSRAM;         /* hw access handle (Z24 SRAM) */
-#endif
 	MDIS_IDENT_FUNCT_TBL idFuncTbl;	/* id function table */
-	OSS_SEM_HANDLE *devSemHdl;		/* device semaphore handle */
 	/* debug */
     u_int32         dbgLevel;		/* debug level */
 	DBG_HANDLE      *dbgHdl;        /* debug handle */
@@ -230,7 +176,6 @@ typedef struct {
 	u_int16			qpdrShadow; 	/* shadow reg of QPDR */
 
 	int32			errors;			/* QSPI error accumulator */
-	u_int8			noFrameDup;		/* 1=prevent frame duplication */
 
 	/* receive fifo (each entry has max. qspiQueueLen words) */
 	int32			rcvFifoDepth;	/* max number of entries in rcv fifo */
@@ -242,29 +187,12 @@ typedef struct {
 	u_int32			rcvFifoAlloc; 	/* memory allocated for rcv fifo */
 	u_int8			*rcvOverBuf; 	/* used when receive fifo full */
 	u_int32			rcvOverAlloc; 	/* memory allocated for rcvOverBuf */
-	u_int32			doBlockRead; 	/* perform blocking read */
-	u_int32 		doAutoMode;		/* perform automatic sending */
-	OSS_SEM_HANDLE  *readSemHdl;
-	int32			timerStarted; 	/* Is the QSPIM timer started? */
 
 	/* transmit buffer */
 	u_int8			*xmtBuf;		/* ptr to xmit buffer */
 	int32			xmtBufState; 	/* see defs above */
 	u_int32			xmtAlloc;		/* memory allocated for xmtBuf */
 
-#if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
-	/*---------------------------------------------------+  
-	| DMA receive buffer                                 |
-	|                                                    |
-	| The DMA receive buffer is placed in the LL_HANDLE  |
-	| so we can configure the DMA Buffer descriptors     |
-	| once and only btach execute the DMA transfers in   |
-	| the interupt handler. This saves us 8 PCIe single  |
-	| long word writes.                                  |
-	+---------------------------------------------------*/
-	u_int8 *recvBuf;			/* ptr to recv buffer */
-	u_int32 recvAlloc;			/* memory allocated for the recv buffer */
-#endif
 	/* signal handle */
 	OSS_SIG_HANDLE	*frmSig;		/* QSPI frame finished signal */
 	OSS_SIG_HANDLE	*emgSig;		/* emergency stop signal */
@@ -276,7 +204,7 @@ typedef struct {
 	void			*callbackArg; 	/* argument to function */
 	void			*callbackStatics; /* OS-9: static storage ptr for callbk */
 
-#if defined(QSPIM_SUPPORT_8240_DMA) 
+#ifdef QSPIM_USE_DMA
 	MACCESS			dmaMa;			/* embedded utility block MACCESS */
 #endif
 } LL_HANDLE;
@@ -285,7 +213,7 @@ typedef struct {
 #include <MEN/ll_entry.h>   /* low-level driver jump table  */
 #include <MEN/qspim_drv.h>   /* QSPIM driver header file */
 
-#define __LoadD201Pld		QSPIM_GLOBNAME(QSPIM_VARIANT,LoadD201Pld)
+#define __LoadD201Pld	QSPIM_GLOBNAME(QSPIM_VARIANT,LoadD201Pld)
 #define __QSPIM_PldData 	QSPIM_GLOBNAME(QSPIM_VARIANT,PldData)
 #define __QSPIM_PldIdent 	QSPIM_GLOBNAME(QSPIM_VARIANT,PldIdent)
 #define __DMA_Init		 	QSPIM_GLOBNAME(QSPIM_VARIANT,DMA_Init)
@@ -302,17 +230,14 @@ extern const u_int8 __QSPIM_PldData[];
 extern char* __QSPIM_PldIdent(void);
 extern int __LoadD201Pld(LL_HANDLE *h);
 
-#if defined(QSPIM_SUPPORT_8240_DMA) || defined(QSPIM_SUPPORT_A21_DMA)
+#ifdef QSPIM_USE_DMA
 extern void __DMA_Init(LL_HANDLE *h);
-#endif
-
-#if defined(QSPIM_SUPPORT_8240_DMA)
-extern int32 __DMA_Transfer(LL_HANDLE *h,void *src, void *dst, u_int32 len, u_int32 dir);
-#endif
-
-#if defined(QSPIM_SUPPORT_A21_DMA)
-extern int32 __DMA_Transfer(LL_HANDLE *h);
-extern void __DMA_UpdateSize(LL_HANDLE *h);
+extern int32 __DMA_Transfer(
+	LL_HANDLE *h,
+	void *src,
+	void *dst,
+	u_int32 len,
+	u_int32 dir);
 #endif
 
 #ifdef __cplusplus
@@ -320,3 +245,4 @@ extern void __DMA_UpdateSize(LL_HANDLE *h);
 #endif
 
 #endif	/* _QSPIM_INT_H */
+
