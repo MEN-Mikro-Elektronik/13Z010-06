@@ -3,50 +3,12 @@
  *         Name: qspim_int.h
  *
  *       Author: kp
- *        $Date: 2015/02/19 11:56:57 $
- *    $Revision: 2.6 $
  *
  *  Description: Internal header file for the QSPIM driver
  *
  *     Switches: see qspim_drv.c
  *
- *-------------------------------[ History ]---------------------------------
  *
- * $Log: qspim_int.h,v $
- * Revision 2.6  2015/02/19 11:56:57  ts
- * R: changes in QSPI core on customer request
- * M: built in direct QSPI mode, auto mode, DMA transfer
- *
- * Revision 2.5  2014/08/26 15:15:30  jt
- * R: Build warning caused by type mismatch
- * M: Corrected types
- *
- * Revision 2.4  2014/08/26 13:53:58  jt
- * R: It was not possible to use blocking I/O on driver's read
- * M: Implement blocking read functionallity
- *
- * Revision 2.3  2012/03/12 13:55:05  dpfeuffer
- * R: QSPIM_BC02 example application for AE57
- * M: noFrameDup param added to LL_HANDLE
- *
- * Revision 2.2  2010/04/30 15:08:14  ag
- * R:1. Driver didn’t work on little-endian platforms.
- * M:1. Adapted register layout because swapping was removed in FPGA.
- * ATTENTION: For EM1A now driver_z76_em1a(_sw).mak must be used.
- *
- * Revision 2.1  2006/03/01 20:49:16  cs
- * removed getTimeBase() prototype
- * only include pld_load.h for D201 variant
- * cosmetics for MDIS4/2004 compliancy
- *
- * Revision 2.0  2001/04/11 10:22:55  kp
- * Major changes to run on A12
- *
- * Revision 1.1  2000/09/25 13:24:08  kp
- * Initial Revision
- *
- *---------------------------------------------------------------------------
- * (c) Copyright 2000 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
 
 #ifndef _QSPIM_INT_H
@@ -147,7 +109,21 @@
 # define QSPI_SPCR3		0x001F	/* (b) */
 # define QSPI_SPSR		0x001E	/* (b) */
 # define QSPI_SPCR4		0x0020	/* (w) */
-
+#elif defined QSPIM_Z076_EM1A
+/* EM1A05 Register layout equal to A12 but define here for clarification */
+# define QSPI_QMCR      0x0002
+# define QSPI_QILR      0x0006
+# define QSPI_QIVR      0x0007
+# define QSPI_TIMER     0x0012
+# define QSPI_QPDR      0x0014
+# define QSPI_QPAR      0x0016
+# define QSPI_QDDR      0x0017
+# define QSPI_SPCR0     0x001a
+# define QSPI_SPCR1     0x0018
+# define QSPI_SPCR2     0x001e
+# define QSPI_SPCR3     0x001c
+# define QSPI_SPSR      0x001d
+# define QSPI_SPCR4     0x0022
 #else
 /*---- A12 implementation of QSPI (32 bit register structure) ---*/
 # define QSPI_QMCR		0x0002	/* (w) */
@@ -164,7 +140,6 @@
 # define QSPI_SPCR3		0x001C	/* (b) */
 # define QSPI_SPSR		0x001D	/* (b) */
 # define QSPI_SPCR4		0x0022	/* (w) */
-
 #endif
 
 
@@ -320,3 +295,4 @@ extern void __DMA_UpdateSize(LL_HANDLE *h);
 #endif
 
 #endif	/* _QSPIM_INT_H */
+

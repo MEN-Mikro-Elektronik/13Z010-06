@@ -4,10 +4,8 @@
  *      Project: QSPIM driver (MDIS4)
  *
  *       Author: kp
- *        $Date: 2015/02/19 11:56:46 $
- *    $Revision: 2.7 $
  *
- *  Description: Low-level driver for QSPI interface Mahr project
+ *  Description: Low-level driver for 16Z076_QSPI IP core and variants
  *
  *     Required: OSS, DESC, DBG, ID libraries
  *     Switches: _ONE_NAMESPACE_PER_DRIVER_
@@ -16,51 +14,6 @@
  *		 QSPIM_D201_SW 			- D201 in swapped mode
  *
  *	   Specification: 13Z010-06_S4.doc
- *
- *-------------------------------[ History ]---------------------------------
- *
- *  --- end of mcvs controlled history log. see Stash for newer commits. ---
- * 
- * $Log: qspim_drv.c,v $
- * Revision 2.7  2015/02/19 11:56:46  ts
- * R: changes in QSPI core on customer request
- * M: built in direct QSPI mode, auto mode, DMA transfer
- *
- * Revision 2.6  2014/08/26 13:53:56  jt
- * R: It was not possible to use blocking I/O on driver's read
- * M: Implement blocking read functionallity
- *
- * Revision 2.5  2012/03/12 13:55:03  dpfeuffer
- * R:1. QSPIM_BC02 example application for AE57
- * M:1.a) QSPIM_NO_DUPLICATION setstat added
- *     b) QSPIM_Irq(): added option to prevent frame duplication
- *
- * Revision 2.4  2010/05/06 11:06:20  amorbach
- * R: 1.  Porting to MDIS5 (according porting guide rev. 0.7)
- * 2.  EaI: setstat value can be zero - division by zero
- * M: 1a. added support for 64bit (Set/GetStat prototypes, m_read calls)
- * 1b. put all MACCESS macros conditionals in brackets
- * 2.  parameter check added
- *
- * Revision 2.3  2010/04/30 15:08:04  ag
- * R:1. Driver didn’t work on little-endian platforms.
- * M:1. Adapted register layout because swapping was removed in FPGA.
- * ATTENTION: For EM1A now driver_z76_em1a(_sw).mak must be used.
- *
- * Revision 2.2  2006/03/01 20:49:14  cs
- * replaced OSS_IrqMask/OSS_IrqUnMask with OSS_IrqMaskR/OSS_IrqRestore
- * removed timing debugs (getTimeBase())
- *     (not support by all OS as it was implemented)
- *
- * Revision 2.1  2001/05/25 11:09:20  kp
- * Added support to call special setstat routines from user interrupt service
- * routines directly. Currently implemented: QSPIM_FRAMESYN
- *
- * Revision 2.0  2001/04/11 10:22:52  kp
- * Major changes to run on A12, using 8240 DMA
- *
- * Revision 1.1  2000/09/25 13:24:07  kp
- * Initial Revision
  *
  *---------------------------------------------------------------------------
  * (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
@@ -71,8 +24,6 @@
 #if defined(LINUX) && defined(QSPIM_SUPPORT_A21_DMA)
 #include <linux/slab.h>
 #endif
-
-/* #define GPIO_DEBUG 1 */
 
 #ifndef _MAC_OFF_
 #define _MAC_OFF_ 	0
@@ -322,14 +273,8 @@ static int32 QSPIM_Init(
 	MSETMASK_D8( h->maQspi, QSPI_QILR, 0x38 );		/* allow qsm interrupts */
 #endif
 	MWRITE_D8( h->maQspi, QSPI_QIVR, 0xff );		/* allow qsm interrupts */
-	/* JT 22-01-2015 */
-#ifndef GPIO_DEBUG 
 	MWRITE_D8( h->maQspi, QSPI_QPAR, 0x7b );		/* define QSM pins */
 
-#else
-	MWRITE_D8( h->maQspi, QSPI_QPAR, 0x3b );
-#endif	/* GPIO_DEBUG */
-	/* JT 22-01-2015 */
 #ifndef QSPIM_D201_SW
 	MWRITE_D16( h->maQspi, QSPI_TIMER, 0 );			/* stop QSPI timer */
 #endif
@@ -1589,7 +1534,7 @@ static int32 QSPIM_Irq(
 		if( h->xmtBufState == XMT_FILLED ){
 #ifdef QSPIM_SUPPORT_8240_DMA
 			__DMA_Transfer( h, h->xmtBuf, (char *)ma + QSPI_ETRANRAM,
-							(h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen), 1 );
+							(h->frmLen&0x3 ? h->frmLen+4 : h->frmLen), 1 );
 #else
 #ifdef QSPIM_Z076
 			MBLOCK_WRITE_D16( ma, QSPI_ETRANRAM,
@@ -1597,7 +1542,7 @@ static int32 QSPIM_Irq(
 							  (u_int16*)h->xmtBuf );
 #else
             MBLOCK_WRITE_D32( ma, QSPI_ETRANRAM,
-                              (h->frmLen&0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
+						  h->frmLen&0x3 ? h->frmLen+4 : h->frmLen,
                               h->xmtBuf );
 #endif /* QSPIM_Z076 */
 #endif /* QSPIM_SUPPORT_8240_DMA */
@@ -1635,11 +1580,6 @@ static int32 QSPIM_Irq(
 		u_int8 *copyBuf;
 		u_int8 rtv;
 
-#ifdef GPIO_DEBUG
-		/* JT 22-01-2015 */
-		UPDATE_QPDR(h->qpdrShadow | (1 << 6) );
-		/* JT 22-01-2015 */
-#endif	/* GPIO_DEBUG */
 		/*------------+
 		|  QSPI IRQ   |
 		+------------*/
@@ -1690,9 +1630,9 @@ static int32 QSPIM_Irq(
 							 h->frmLen&0x1 ? h->frmLen+1 : h->frmLen,
 							 (u_int16 *)copyBuf );
 #else
-        MBLOCK_READ_D32( ma, QSPI_ERECRAM,
-                             (h->frmLen & 0x3 ? h->frmLen&=~0x3, h->frmLen+4 : h->frmLen),
-                             copyBuf );
+		/* A12/Motorola mode */
+		MBLOCK_READ_D32( ma, QSPI_ERECRAM,  h->frmLen & 0x3 ? h->frmLen+4 : h->frmLen,  copyBuf );
+
 #endif /* QSPIM_Z076 */
 #endif /* QSPIM_SUPPORT_8240_DMA */
 
@@ -1726,12 +1666,6 @@ static int32 QSPIM_Irq(
 		/*--- Check if Realtime violation bit is set by core ---*/
 		if( h->emgSig && rtv )
 			OSS_SigSend( h->osHdl, h->emgSig );
-
-#ifdef GPIO_DEBUG
-		/* JT 22-01-2015 */
-		UPDATE_QPDR(h->qpdrShadow & ~(1 << 6) );
-		/* JT 22-01-2015 */
-#endif	/* GPIO_DEBUG */
 
 		return LL_IRQ_DEVICE;
 	}

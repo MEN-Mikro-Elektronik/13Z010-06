@@ -34,7 +34,7 @@
 		<model>
 			<hwname>16Z076_QSPI</hwname>
 			<modelname>16Z076_QSPI_EM1A05</modelname>
-			<description>QSPI on EM1A05</description>
+			<description>customer specific QSPI on EM1A05 and EM10A</description>
 			<devnameprefix>QSPIM</devnameprefix>
 			<devtype>MDIS</devtype>
 			<autoid>
@@ -51,7 +51,7 @@
 			<swmodulelist>
 				<swmodule>
 					<name>z76_qspim_em1a</name>
-					<description>Driver for Z076_QSPI on EM1A</description>
+					<description>Customer specific QSPI driver for EM1A05 and EM10A</description>
 					<type>Low Level Driver</type>
 					<makefilepath>QSPIM/DRIVER/COM/driver_z76_em1a.mak</makefilepath>
 				</swmodule>

@@ -3,8 +3,6 @@
  *         Name: qspim_drv.h
  *
  *       Author: kp
- *        $Date: 2015/03/05 18:06:04 $
- *    $Revision: 2.8 $
  *
  *  Description: Header file for QSPIM driver
  *               - QSPIM specific status codes
@@ -13,40 +11,7 @@
  *     Switches: _ONE_NAMESPACE_PER_DRIVER_
  *               _LL_DRV_
  *
- *-------------------------------[ History ]---------------------------------
  *
- * $Log: qspim_drv.h,v $
- * Revision 2.8  2015/03/05 18:06:04  ts
- * R: new DMA functionality was needed for a customer
- * M: added DMA functionality to A21 FPGA and added AUTO transfer mode
- *
- * Revision 2.7  2014/08/26 13:54:00  jt
- * R: It was not possible to use blocking I/O on driver's read
- * M: Implement blocking read functionallity
- *
- * Revision 2.6  2012/03/12 13:55:10  dpfeuffer
- * R: QSPIM_BC02 example application for AE57
- * M: QSPIM_NO_DUPLICATION setstat code added
- *
- * Revision 2.5  2010/05/06 11:09:50  amorbach
- * R: driver ported to MDIS5, new MDIS_API and men_typs
- * M: for backward compatibility to MDIS4 optionally define new types
- *
- * Revision 2.4  2006/03/01 20:49:35  cs
- * cosmetics for MDIS4/2004 compliancy
- *
- * Revision 2.3  2001/05/25 11:09:25  kp
- * Added defs for direct isetstat function
- *
- * Revision 2.2  2001/04/11 10:23:10  kp
- * replace QSPIM_TIMER_HI/LO_TIME with QSPIM_TIMER_CYCLE_TIME
- * added QSPIM_FRAMESYN
- *
- * Revision 2.1  2000/09/25 13:24:19  kp
- * Initial Revision
- *
- *---------------------------------------------------------------------------
- * (c) Copyright 2010 by MEN mikro elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
 
 #ifndef _QSPIM_DRV_H
@@ -175,5 +140,3 @@ typedef struct {
 #endif
 
 #endif /* _QSPIM_DRV_H */
-
-

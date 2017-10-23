@@ -22,6 +22,9 @@
 # (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuremberg, Germany
 #*****************************************************************************
 
+# ts@men 20.10.2017: this .mak file makes actually no sense since an EM1A (=PPC) specific model
+#                    will never be used or work with non swapped x86 or other little endian machine.
+
 MAK_NAME=z76_qspim_em1a
 
 MAK_SWITCH= $(SW_PREFIX)MAC_MEM_MAPPED \
