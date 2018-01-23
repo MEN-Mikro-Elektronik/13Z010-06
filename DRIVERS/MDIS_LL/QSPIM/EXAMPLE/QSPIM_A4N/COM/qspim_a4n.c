@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 	while( !G_endMe ){
 		UOS_Delay(1000);
 		printf("CY %10d XE=%d RE=%d EE=%d ",
-			   G_cycles, G_xmtErrors, G_rcvErrors, G_emgErrors );
+			   (int)G_cycles, (int)G_xmtErrors, (int)G_rcvErrors, (int)G_emgErrors );
 
 		printf("Data: ");
 		for(i=0; i<16; i++ )

@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
 	while( !G_endMe ){
 		UOS_Delay(5000);
 		printf("cycles=%d xmtErr=%d rcvErr=%d emgErrors=%d verErrors=%d\n",
-			   G_cycles, G_xmtErrors, G_rcvErrors, G_emgErrors, G_verErrors );
+			   (int)G_cycles, (int)G_xmtErrors, (int)G_rcvErrors, (int)G_emgErrors, (int)G_verErrors );
 	}
 
 	/* not reached */
