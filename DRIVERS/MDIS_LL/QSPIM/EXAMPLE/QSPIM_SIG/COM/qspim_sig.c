@@ -14,40 +14,23 @@
  *     Required: libraries: mdis_api, usr_oss
  *     Switches: -
  *
- *-------------------------------[ History ]---------------------------------
- *
- * $Log: qspim_sig.c,v $
- * Revision 1.7  2014/07/21 16:05:27  ts
- * R: warning about different size at pointer/integer cast
- * M: cast to INT_32_OR_64 instead int32
- *
- * Revision 1.6  2010/05/10 14:21:27  amorbach
- * R: APB build failed
- * M: variable type path changed to MDIS_PATH
- *
- * Revision 1.5  2010/05/06 10:57:07  amorbach
- * R: Porting to MDIS5
- * M: added support for 64bit (MDIS_PATH)
- *
- * Revision 1.4  2010/03/23 11:43:23  apb
- * R: 1. not compilable with current implementation of UOS_Sig
- *    2. build warnings because of type incompatibilities
- * M: 1. added __MAPILIB macro to declaration and implementation of SigHandler
- *    2. fixed types in main and FillFrame()
- *
- * Revision 1.3  2006/03/01 20:49:30  cs
- * cosmetics for MDIS4/2004 compliancy
- *
- * Revision 1.2  2001/04/11 10:23:01  kp
- * setime timer cycle
- * activate FRAMESYN signal
- *
- * Revision 1.1  2000/09/25 13:24:18  kp
- * Initial Revision
- *
  *---------------------------------------------------------------------------
  * (c) Copyright 2010 by MEN mikro elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
+/*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 static const char RCSid[]="$Id: qspim_sig.c,v 1.7 2014/07/21 16:05:27 ts Exp $";
 

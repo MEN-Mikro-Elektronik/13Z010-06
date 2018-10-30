@@ -14,19 +14,23 @@
  *     Required: libraries: mdis_api, usr_oss
  *     Switches: -
  *
- *-------------------------------[ History ]---------------------------------
- *
- * $Log: qspim_xc7.c,v $
- * Revision 1.2  2010/05/18 15:42:02  MRoth
- * R: Porting to MDIS5
- * M: 1. added support for 64bit (MDIS_PATH)
- *    2. added  __MAPILIB to SigHandler
- *
- * Revision 1.1  2010/05/10 15:02:20  ag
- * Initial Revision
  *---------------------------------------------------------------------------
  * (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuremberg, Germany
  ****************************************************************************/
+/*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 static const char RCSid[]="$Id: qspim_xc7.c,v 1.2 2010/05/18 15:42:02 MRoth Exp $";
 

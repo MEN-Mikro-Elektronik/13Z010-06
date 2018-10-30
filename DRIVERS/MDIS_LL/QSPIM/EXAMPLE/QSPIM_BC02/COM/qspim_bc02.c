@@ -17,20 +17,23 @@
  *     Required: libraries: mdis_api, usr_oss
  *     Switches: -
  *
- *-------------------------------[ History ]---------------------------------
- *
- * $Log: qspim_bc02.c,v $
- * Revision 1.2  2014/07/21 16:04:27  ts
- * R: warning about implicit atoi() and different size at pointer/integer cast
- * M: 1. include <stdlib.h>
- *    2. cast to INT_32_OR_64 instead int32
- *
- * Revision 1.1  2012/03/12 13:55:09  dpfeuffer
- * Initial Revision
- *
  *---------------------------------------------------------------------------
  * (c) Copyright 2012 by MEN Mikro Elektronik GmbH, Nuernberg, Germany
  ****************************************************************************/
+/*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 static const char RCSid[]="$Id: qspim_bc02.c,v 1.2 2014/07/21 16:04:27 ts Exp $";
 

@@ -16,19 +16,23 @@
  *---------------------------[ Public Functions ]----------------------------
  *  
  *  
- *-------------------------------[ History ]---------------------------------
- *
- * $Log: d201.c,v $
- * Revision 1.2  2010/05/06 10:53:41  amorbach
- * R: Porting to MDIS5 (according porting guide rev. 0.8)
- * M: put all MACCESS macros conditionals in brackets
- *
- * Revision 1.1  2000/09/25 13:24:03  kp
- * Initial Revision
- *
  *---------------------------------------------------------------------------
  * (c) Copyright 2000 by MEN mikro elektronik GmbH, Nuernberg, Germany 
  ****************************************************************************/
+/*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
  
 #ifdef QSPIM_D201_SW
 # define MAC_BYTESWAP

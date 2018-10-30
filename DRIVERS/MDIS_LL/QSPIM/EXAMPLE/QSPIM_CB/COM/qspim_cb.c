@@ -18,34 +18,23 @@
  *     Required: libraries: mdis_api, usr_oss, os_men, drvsupp, dbg
  *     Switches: DBG
  *
- *-------------------------------[ History ]---------------------------------
- *
- * $Log: qspim_cb.c,v $
- * Revision 1.5  2010/05/10 14:21:25  amorbach
- * R: APB build failed
- * M: 1. variable type path changed to MDIS_PATH
- *    2. data type of variable i changed to u_int16
- *
- * Revision 1.4  2010/05/06 10:57:44  amorbach
- * R: Porting to MDIS5
- * M: 1. added support for 64bit (MDIS_PATH)
- *    2. added  __MAPILIB to SigHandler
- *
- * Revision 1.3  2001/05/25 11:09:23  kp
- * Toggle FRAMESYN signal every 100th cycle using new direct isetstat function
- *
- * Revision 1.2  2001/04/11 10:22:59  kp
- * use 18 rather 16 QSPI words (Will no longer run on F1/D201)
- * setime timer cycle
- * activate FRAMESYN signal
- * cleanup no longer done in signal handler, but in main routine
- *
- * Revision 1.1  2000/09/25 13:24:16  kp
- * Initial Revision
- *
  *---------------------------------------------------------------------------
  * (c) Copyright 2010 by MEN mikro elektronik GmbH, Nuernberg, Germany 
  ****************************************************************************/
+/*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
  
 static const char RCSid[]="$Id: qspim_cb.c,v 1.5 2010/05/10 14:21:25 amorbach Exp $";
 
