@@ -32,8 +32,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-static const char RCSid[]="$Id: qspim_sig.c,v 1.7 2014/07/21 16:05:27 ts Exp $";
-
 #include <stdio.h>
 #include <string.h>
 #include <MEN/men_typs.h>

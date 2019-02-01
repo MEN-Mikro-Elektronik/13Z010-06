@@ -34,6 +34,12 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef __KERNEL__
+# include <linux/types.h>
+#else
+# include <stdint.h>
+#endif
+
 #include "qspim_int.h"
 
 /*
@@ -109,7 +115,7 @@ void __DMA_Init(LL_HANDLE *h)
 	OSS_PciGetConfig( h->osHdl, 0, 0, 0, OSS_PCI_ACCESS_32 | 0x78,
 					  (int32 *)&embBase );
 
-	h->dmaMa = (MACCESS)embBase;
+	h->dmaMa = (MACCESS)(uintptr_t)embBase;
 
 	DBGWRT_2((DBH," Embedded utility base=0x%lx\n", embBase));
 
@@ -154,8 +160,8 @@ int32 __DMA_Transfer(
 			   src, dst, len, dir ));
 
 	DMA_WRITE( ma, DMA_DMR, DMR_VAL );			/* set mode */
-	DMA_WRITE( ma, DMA_SAR, (u_int32)src ); 	/* source address */
-	DMA_WRITE( ma, DMA_DAR, (u_int32)dst ); 	/* dest. address */
+	DMA_WRITE( ma, DMA_SAR, (U_INT32_OR_64)src ); 	/* source address */
+	DMA_WRITE( ma, DMA_DAR, (U_INT32_OR_64)dst ); 	/* dest. address */
 	DMA_WRITE( ma, DMA_BCR, len ); 				/* byte count */
 	DMA_WRITE( ma, DMA_CDAR, 0x10 | (dir<<1));  /* snoop enable, direction */
 

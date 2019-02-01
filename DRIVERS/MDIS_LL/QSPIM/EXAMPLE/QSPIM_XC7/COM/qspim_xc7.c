@@ -32,8 +32,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-static const char RCSid[]="$Id: qspim_xc7.c,v 1.2 2010/05/18 15:42:02 MRoth Exp $";
-
 #include <stdio.h>
 #include <string.h>
 #include <MEN/men_typs.h>
@@ -245,7 +243,7 @@ int main(int argc, char *argv[])
 		}
 
 		curFrm = defFrm[k];
-		if( M_setstat(path, QSPIM_BLK_DEFINE_FRM, (int32)&blk )) {
+		if( M_setstat(path, QSPIM_BLK_DEFINE_FRM, (INT32_OR_64)&blk )) {
 			PrintError("QSPIM_BLK_DEFINE_FRM");
 			goto cleanup;
 		}

@@ -280,7 +280,7 @@ static int ad48n_qspi_config_frame(MDIS_PATH qspim_path, enum chip_select pcs,
 	blk.data = (void *)&frame;
 	blk.size = sizeof(frame);
 
-	ret = M_setstat(qspim_path, QSPIM_BLK_DEFINE_FRM, (int32)&blk);
+	ret = M_setstat(qspim_path, QSPIM_BLK_DEFINE_FRM, (INT32_OR_64)&blk);
 	if (ret) {
 		PrintError("setstat QSPIM_BLK_DEFINE_FRM");
 		return(-1);

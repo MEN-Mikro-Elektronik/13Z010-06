@@ -45,8 +45,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-static const char RCSid[]="$Id: qspim_a4n.c,v 1.6 2014/07/21 16:04:46 ts Exp $";
-
 #include <stdio.h>
 #include <string.h>
 #include <MEN/men_typs.h>

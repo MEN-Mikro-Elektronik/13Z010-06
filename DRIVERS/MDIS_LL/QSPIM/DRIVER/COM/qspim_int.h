@@ -45,7 +45,7 @@
 |  DEFINES                                 |
 +-----------------------------------------*/
 /* general */
-#define CH_NUMBER			1			/* number of device channels */
+#define CH_NUMBER			1		/* number of device channels */
 #define USE_IRQ				TRUE		/* interrupt required  */
 
 #ifdef QSPIM_D201_SW
@@ -55,7 +55,9 @@
 #if defined(QSPIM_SUPPORT_8240_DMA) || defined (QSPIM_SUPPORT_A21_DMA)
 # define ADDRSPACE_COUNT		3		/* nr of required address spaces */
 #else
+#if !defined (ADDRSPACE_COUNT)                          
 # define ADDRSPACE_COUNT		1		/* nr of required address spaces */
+#endif
 #endif
 /* debug settings */
 #define DBG_MYLEVEL			h->dbgLevel
