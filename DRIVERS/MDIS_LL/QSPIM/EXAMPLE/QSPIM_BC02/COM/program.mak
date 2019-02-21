@@ -6,14 +6,8 @@
 #
 #    Description: Makefile definitions for the QSPIM_BC02 example program
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: program.mak,v $
-#   Revision 1.1  2012/03/12 13:55:07  dpfeuffer
-#   Initial Revision
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2012 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2012-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_bc02

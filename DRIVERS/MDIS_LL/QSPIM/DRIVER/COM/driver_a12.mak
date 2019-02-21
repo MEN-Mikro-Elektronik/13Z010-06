@@ -6,21 +6,8 @@
 #
 #    Description: Makefile definitions for the A12 QSPIM driver
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: driver_a12.mak,v $
-#   Revision 1.3  2010/05/06 10:54:51  amorbach
-#   R: MDVE check failed
-#   M: QSPIM_VARIANT added
-#
-#   Revision 1.2  2006/03/01 20:49:10  cs
-#   fixes: added pld.o and modcom.h
-#
-#   Revision 1.1  2001/04/11 10:22:50  kp
-#   Initial Revision
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2001 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2001-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_a12

@@ -6,20 +6,8 @@
 #
 #    Description: Makefile definitions for the QSPI AD48N test tool
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: program.mak,v $
-#   Revision 1.1  2015/02/19 12:27:34  ts
-#   Initial Revision
-#
-#   Revision 1.1  2015/02/19 11:53:34  ts
-#   Initial Revision
-#
-#   Revision 1.1  2014/03/28 13:54:30  MRoth
-#   Initial Revision
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2014 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2014-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_ad48n

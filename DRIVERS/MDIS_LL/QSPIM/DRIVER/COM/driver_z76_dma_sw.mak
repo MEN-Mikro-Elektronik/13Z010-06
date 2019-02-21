@@ -7,26 +7,8 @@
 #    Description: Makefile definitions for QSPIM (16Z076_QSPI) driver
 #                 swapped mode
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: driver_z76_dma_sw.mak,v $
-#   Revision 2.2  2015/03/05 18:08:52  ts
-#   R: built module name was wrong, not to distinguish from regular sw variant
-#   M: changed mak_name to z76_qspim_dma_sw
-#
-#   Revision 2.1  2015/02/19 12:28:24  ts
-#   Initial Revision
-#
-#   Revision 2.2  2010/04/30 14:36:19  ag
-#   R:1. Wrong MAK_SWITCH: MAC_BYTE_SWAPPED
-#   M:1. Replaced MAC_BYTE_SWAPPED by MAC_BYTESWAP
-#
-#   Revision 2.1  2006/03/01 20:49:13  cs
-#   Initial Revision
-#
-#
 #-----------------------------------------------------------------------------
-# (c) Copyright 2006 by MEN Mikro Elektronik GmbH, Nuremberg, Germany
+#   Copyright (c) 2006-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=z76_qspim_dma_sw

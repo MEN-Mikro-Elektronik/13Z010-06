@@ -6,15 +6,8 @@
 #
 #    Description: Makefile definitions for the XC7 QSPI example program
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: program.mak,v $
-#   Revision 1.1  2010/05/10 15:02:14  ag
-#   Initial Revision
-#
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2010 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2010-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_xc7

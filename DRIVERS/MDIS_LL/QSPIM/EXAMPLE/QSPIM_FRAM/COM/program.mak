@@ -6,14 +6,8 @@
 #
 #    Description: Makefile definitions for the QSPI FRAM test tool
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: program.mak,v $
-#   Revision 1.1  2014/03/28 13:54:30  MRoth
-#   Initial Revision
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2014 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2014-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_fram

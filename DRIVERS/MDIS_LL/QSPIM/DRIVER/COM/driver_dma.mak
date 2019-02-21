@@ -6,13 +6,8 @@
 #
 #    Description: Makefile definitions for the QSPIM driver with 16z062 DMA
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   Revision 1.1  2014/11/24 10:22:50  jt
-#   Initial Revision
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2014 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2014-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_dma

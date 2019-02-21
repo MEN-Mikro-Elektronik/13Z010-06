@@ -6,15 +6,8 @@
 #
 #    Description: Makefile definitions for QSPIM (16Z076_QSPI) driver
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: driver_z76.mak,v $
-#   Revision 2.1  2006/03/01 20:49:12  cs
-#   Initial Revision
-#
-#
 #-----------------------------------------------------------------------------
-# (c) Copyright 2006 by MEN Mikro Elektronik GmbH, Nuremberg, Germany
+#   Copyright (c) 2006-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=z76_qspim

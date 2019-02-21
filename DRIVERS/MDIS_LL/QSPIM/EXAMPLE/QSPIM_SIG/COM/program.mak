@@ -6,17 +6,8 @@
 #
 #    Description: Makefile definitions for the QSPIM example program
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: program.mak,v $
-#   Revision 1.2  2006/03/01 20:49:28  cs
-#   cosmetics for MDIS4/2004 compliancy
-#
-#   Revision 1.1  2000/09/25 13:24:17  kp
-#   Initial Revision
-#
 #-----------------------------------------------------------------------------
-#   (c) Copyright 2000 by MEN mikro elektronik GmbH, Nuernberg, Germany
+#   Copyright (c) 2000-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 MAK_NAME=qspim_sig

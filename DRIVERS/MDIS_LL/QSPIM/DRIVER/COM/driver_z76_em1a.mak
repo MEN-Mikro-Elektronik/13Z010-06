@@ -6,20 +6,8 @@
 #
 #    Description: Makefile definitions for QSPIM (16Z076_QSPI for EM1A) driver
 #
-#---------------------------------[ History ]---------------------------------
-#
-#   $Log: driver_z76_em1a.mak,v $
-#   Revision 2.2  2010/05/06 10:56:10  amorbach
-#   R: MDVE check failed
-#   M: 1. QSPIM_VARIANT added
-#      2. MAK_NAME corrected
-#
-#   Revision 2.1  2010/04/30 15:03:22  ag
-#   Initial Revision
-#
-#
 #-----------------------------------------------------------------------------
-# (c) Copyright 2010 by MEN Mikro Elektronik GmbH, Nuremberg, Germany
+#   Copyright (c) 2010-2019, MEN Mikro Elektronik GmbH
 #*****************************************************************************
 
 # ts@men 20.10.2017: this .mak file makes actually no sense since an EM1A (=PPC) specific model
