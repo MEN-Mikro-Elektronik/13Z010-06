@@ -5,30 +5,9 @@ Fri May 25 11:06:28 MEST 2001
 Overview of all Programs
 ------------------------
 
-qspim_cb         - QSPIM example for callback mode
 qspim_sig        - QSPIM example
 qspim_a4n        - QSPIM example using A4N
-qspim_cb         - QSPIM example for callback mode
 
-Program qspim_cb
-----------------
-
-Usage:
-   qspim_cb <device>
-
-Function:
-   QSPIM example for callback mode
-
-Options:
-   device       device name   
-   
-Description:
-   Example program for the QSPIM driver   
-   Uses the callback mode.   
-   
-   !!!! RUNS ONLY UNDER OS-9000 !!!!   
-   !!!! Compile with -r option (no stack checking) !!!!   
-   !!!! Compile with -be=pg option (set const pointer) !!!!   
    
 Program qspim_sig
 -----------------
@@ -74,24 +53,4 @@ Description:
    FFFC1A: 8000   
    
    D FFFD00 to view data   
-   
-Program qspim_cb
-----------------
-
-Usage:
-   qspim_cb <device>
-
-Function:
-   QSPIM example for callback mode
-
-Options:
-   device       device name   
-   
-Description:
-   Example program for the QSPIM driver   
-   Uses the callback mode.   
-   
-   !!!! RUNS ONLY UNDER OS-9000 !!!!   
-   !!!! Compile with -r option (no stack checking) !!!!   
-   !!!! Compile with -be=pg option (set const pointer) !!!!   
    

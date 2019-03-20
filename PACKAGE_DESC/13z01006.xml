@@ -263,13 +263,6 @@
 			<makefilepath>QSPIM/EXAMPLE/QSPIM_A4N/COM/program.mak</makefilepath>
 		</swmodule>
 		<swmodule internal="false">
-			<name>qspim_cb</name>
-			<description>Example program for the QSPIM driver. Uses the callback mode.</description>
-			<type>Driver Specific Tool</type>
-			<makefilepath>QSPIM/EXAMPLE/QSPIM_CB/COM/program.mak</makefilepath>
-			<os>OS-9</os>
-		</swmodule>
-		<swmodule internal="false">
 			<name>qspim_sig</name>
 			<description>Example program for the QSPIM driver. Uses the signal mode.</description>
 			<type>Driver Specific Tool</type>
