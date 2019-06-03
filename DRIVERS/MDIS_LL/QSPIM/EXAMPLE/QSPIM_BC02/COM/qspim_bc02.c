@@ -5,8 +5,6 @@
  ****************************************************************************
  *
  *       Author: dp
- *        $Date: 2014/07/21 16:04:27 $
- *    $Revision: 1.2 $
  *
  *  Description: Example program for the QSPIM driver
  *
@@ -43,6 +41,8 @@
 #include <MEN/qspim_drv.h>
 #include <MEN/usr_oss.h>
 #include <MEN/usr_utl.h>
+
+static const char IdentString[]=MENT_XSTR(MAK_REVISION);
 
 /*--------------------------------------+
 |   DEFINES                             |
@@ -133,7 +133,7 @@ static void usage(void)
 	printf("2) config switch : qspim_bc02 <device> -c\n");
 	printf("3) start switch  : qspim_bc02 <device> -r=0x01 -v=0x01\n");
 	printf("\n");
-	printf("(c) 2012 by MEN mikro elektronik GmbH\n\n");
+	printf("Copyright (c) 2012-2019, MEN Mikro Elektronik GmbH\n%s\n", IdentString);
 }
 
 /********************************* main *************************************

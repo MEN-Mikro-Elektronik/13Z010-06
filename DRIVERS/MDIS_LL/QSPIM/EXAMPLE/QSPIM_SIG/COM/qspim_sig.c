@@ -5,8 +5,6 @@
  ****************************************************************************
  *
  *       Author: kp
- *        $Date: 2014/07/21 16:05:27 $
- *    $Revision: 1.7 $
  *
  *  Description: Example program for the QSPIM driver
  *				 Uses the signal mode

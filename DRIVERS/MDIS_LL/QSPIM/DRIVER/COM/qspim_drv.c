@@ -49,6 +49,7 @@
 				 (((x) & 0x0000ff00) >> 8)  |	\
 				 (((x) & 0x000000ff) << 8))
 
+static const char IdentString[]=MENT_XSTR(MAK_REVISION);
 
 /*-----------------------------------------+
 |  PROTOTYPES                              |
@@ -1846,7 +1847,7 @@ static int32 QSPIM_Info(
  ****************************************************************************/
 static char* Ident( void )	/* nodoc */
 {
-    return( "QSPIM - QSPIM low level driver: $Id: qspim_drv.c,v 2.7 2015/02/19 11:56:46 ts Exp $" );
+    return( (char*) IdentString );
 }
 
 /********************************* Cleanup **********************************

@@ -5,8 +5,6 @@
  ****************************************************************************
  *
  *       Author: michael.roth@men.de
- *        $Date: 2014/07/22 10:27:27 $
- *    $Revision: 1.2 $
  *
  *  Description: Test tool for a QSPI connected FRAM
  *               (RAMTRON FM25H20 256k x 8 - 5280-0039)
@@ -31,7 +29,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-static const char RCSid[]="$Id: qspim_fram.c,v 1.2 2014/07/22 10:27:27 ts Exp $";
 
 /*-------------------------------------+
 |    INCLUDES                          |
@@ -43,6 +40,8 @@ static const char RCSid[]="$Id: qspim_fram.c,v 1.2 2014/07/22 10:27:27 ts Exp $"
 #include <MEN/usr_oss.h>
 #include <MEN/usr_utl.h>
 #include <MEN/qspim_drv.h>
+
+static const char IdentString[]=MENT_XSTR(MAK_REVISION);
 
 /*-------------------------------------+
 |    DEFINES                           |
@@ -114,7 +113,7 @@ static void usage( void )
 	printf("     qspim_fram z76_qspim_1 -r=0x01 -b=0xab \n");
 	printf("\n4) simple memory test: \n");
 	printf("     qspim_fram z76_qspim_1 -m \n");
-	printf("\n(c)Copyright 2014 by MEN Mikro Elektronik GmbH\n%s\n\n", RCSid);
+	printf("\nCopyright (c) 2014-2019, MEN Mikro Elektronik GmbH\n%s\n\n", IdentString);
 }
 
 /****************************************************************************/

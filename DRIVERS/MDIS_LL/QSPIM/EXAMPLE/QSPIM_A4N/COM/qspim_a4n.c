@@ -5,8 +5,6 @@
  ****************************************************************************
  *
  *       Author: kp
- *        $Date: 2014/07/21 16:04:46 $
- *    $Revision: 1.6 $
  *
  *  Description: Example program for the QSPIM driver
  *				 To be used with A4N card and special connection.

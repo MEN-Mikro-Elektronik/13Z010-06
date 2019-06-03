@@ -4,8 +4,6 @@
  *      Project: QSPI for Mahr.
  *
  *       Author: jt
- *        $Date: 2015/02/19 12:28:21 $
- *    $Revision: 2.1 $
  *
  *  Description: Functions for z62 DMA
  *

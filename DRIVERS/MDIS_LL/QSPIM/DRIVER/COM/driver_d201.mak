@@ -1,8 +1,6 @@
 #***************************  M a k e f i l e  *******************************
 #
 #         Author: kp
-#          $Date: 2010/05/06 10:55:47 $
-#      $Revision: 1.2 $
 #
 #    Description: Makefile definitions for the QSPIM driver
 #
@@ -23,8 +21,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 MAK_NAME=z76_qspim_d201
+# the next line is updated during the MDIS installation
+STAMPED_REVISION="13Z010-06_02_18-3-g2def2ea-dirty_2019-05-30"
+
+DEF_REVISION=MAK_REVISION=$(STAMPED_REVISION)
 
 MAK_SWITCH=$(SW_PREFIX)MAC_MEM_MAPPED \
+		$(SW_PREFIX)$(DEF_REVISION) \
          $(SW_PREFIX)QSPIM_VARIANT=Z76_QSPIM_D201_SW \
          $(SW_PREFIX)QSPIM_D201_SW
 

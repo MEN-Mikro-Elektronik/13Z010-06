@@ -1,11 +1,9 @@
 /*********************  P r o g r a m  -  M o d u l e ***********************
  *  
  *         Name: qspim_pld.c
- *      Project: QSPIM module driver (MDIS V4.x)
+ *      Project: QSPIM module driver 
  *
  *       Author: kp
- *        $Date: 2000/09/25 13:24:09 $
- *    $Revision: 1.1 $
  *
  *  Description: PLD data array and ident function
  *                      

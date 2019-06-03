@@ -18,8 +18,13 @@
 #*****************************************************************************
 
 MAK_NAME=z76_qspim_em1a_sw
+# the next line is updated during the MDIS installation
+STAMPED_REVISION="13Z010-06_02_18-3-g2def2ea-dirty_2019-05-30"
+
+DEF_REVISION=MAK_REVISION=$(STAMPED_REVISION)
 
 MAK_SWITCH= $(SW_PREFIX)MAC_MEM_MAPPED \
+		$(SW_PREFIX)$(DEF_REVISION) \
 			$(SW_PREFIX)QSPIM_Z076_EM1A \
 			$(SW_PREFIX)QSPIM_VARIANT=Z76_QSPI_EM1A_SW
 

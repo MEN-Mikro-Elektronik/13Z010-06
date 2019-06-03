@@ -4,8 +4,6 @@
  *      Project: QSPI for Mahr. Prototype phase with D201
  *
  *       Author: kp
- *        $Date: 2010/05/06 10:53:41 $
- *    $Revision: 1.2 $
  *
  *  Description: Load the D201 PLD with QSPI code
  *                      

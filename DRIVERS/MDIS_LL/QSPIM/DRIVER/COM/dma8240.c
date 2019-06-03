@@ -4,8 +4,6 @@
  *      Project: QSPI for Mahr.
  *
  *       Author: kp
- *        $Date: 2006/03/01 20:49:08 $
- *    $Revision: 1.2 $
  *
  *  Description: Functions for 8240 DMA
  *

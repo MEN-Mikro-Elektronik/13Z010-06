@@ -5,8 +5,6 @@
  ****************************************************************************
  *
  *       Author: ag
- *        $Date: 2010/05/18 15:42:02 $
- *    $Revision: 1.2 $
  *
  *  Description: Example program for the QSPI-Interface on XC7
  *				 Uses the signal mode
