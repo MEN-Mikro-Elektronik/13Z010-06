@@ -36,11 +36,16 @@
 #include "qspim_plddata.h"
 #undef char
 
+#ifdef QSPIM_PLD_VERSION
+    static const char IdentString[]=MENT_XSTR_SFX(MAK_REVISION,QSPIM_PLD_VERSION);
+#else
+    static const char IdentString[]=MENT_XSTR(MAK_REVISION);
+#endif
+
+
 /* QSPIM_PldIdent: return ident string */
 char* __QSPIM_PldIdent( void )
 {
-     return( "QSPIM - QSPIM pld data "
-			 QSPIM_PLD_VERSION
-			 ": $Id: qspim_pld.c,v 1.1 2000/09/25 13:24:09 kp Exp $" ) ;
+     return( (char*) IdentString );
 }
 
