@@ -1,7 +1,7 @@
 /*********************  P r o g r a m  -  M o d u l e ***********************
  *
  *         Name: qspim_drv.c
- *      Project: QSPIM driver (MDIS4)
+ *      Project: QSPIM driver (MDIS5)
  *
  *       Author: kp
  *
