@@ -1,3 +1,13 @@
+/*
+ *  Code that is loaded into a PLD by the driver
+ *
+ *  Copyright 2019 MEN Mikro Elektronik GmbH
+ *
+ *  This binary code is not part of the driver and proprietary.
+ *  Reproduction and distribution is permitted for all customers
+ *  of MEN Mikro Elektronik GmbH.
+ */
+
 #define QSPIM_PLD_VERSION "d201_qspi.ttf" 
 /* __QSPIM_PldData: 14751+4 data bytes (d201_qspi.ttf) */
 const char __QSPIM_PldData[] = {
