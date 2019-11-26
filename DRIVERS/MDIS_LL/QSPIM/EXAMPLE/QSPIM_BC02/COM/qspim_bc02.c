@@ -16,7 +16,7 @@
  *     Switches: -
  *
  *---------------------------------------------------------------------------
- * Copyright (c) 2012-2019, MEN Mikro Elektronik GmbH
+ * Copyright 2012-2019, MEN Mikro Elektronik GmbH
  ****************************************************************************/
 /*
 * This program is free software: you can redistribute it and/or modify
@@ -133,7 +133,7 @@ static void usage(void)
 	printf("2) config switch : qspim_bc02 <device> -c\n");
 	printf("3) start switch  : qspim_bc02 <device> -r=0x01 -v=0x01\n");
 	printf("\n");
-	printf("Copyright (c) 2012-2019, MEN Mikro Elektronik GmbH\n%s\n", IdentString);
+	printf("Copyright 2012-2019, MEN Mikro Elektronik GmbH\n%s\n", IdentString);
 }
 
 /********************************* main *************************************

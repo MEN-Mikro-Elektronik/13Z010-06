@@ -13,7 +13,7 @@
  *     Switches: -
  *
  *---------------------------------------------------------------------------
- * Copyright (c) 2014-2019, MEN Mikro Elektronik GmbH
+ * Copyright 2014-2019, MEN Mikro Elektronik GmbH
  ****************************************************************************/
 /*
 * This program is free software: you can redistribute it and/or modify
@@ -113,7 +113,7 @@ static void usage( void )
 	printf("     qspim_fram z76_qspim_1 -r=0x01 -b=0xab \n");
 	printf("\n4) simple memory test: \n");
 	printf("     qspim_fram z76_qspim_1 -m \n");
-	printf("\nCopyright (c) 2014-2019, MEN Mikro Elektronik GmbH\n%s\n\n", IdentString);
+	printf("\nCopyright 2014-2019, MEN Mikro Elektronik GmbH\n%s\n\n", IdentString);
 }
 
 /****************************************************************************/
