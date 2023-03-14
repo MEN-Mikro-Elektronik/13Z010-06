@@ -56,7 +56,7 @@ static const char IdentString[]=MENT_XSTR(MAK_REVISION);
 +-----------------------------------------*/
 static int32 QSPIM_Init(DESC_SPEC *descSpec, 
 			OSS_HANDLE *osHdl,
-			MACCESS ma[ADDRSPACE_COUNT], 
+			MACCESS ma[],
 			OSS_SEM_HANDLE *devSemHdl,
 			OSS_IRQ_HANDLE *irqHdl, 
 			LL_HANDLE **hP);
