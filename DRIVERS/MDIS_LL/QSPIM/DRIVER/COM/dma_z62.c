@@ -34,6 +34,13 @@
 
 #include "qspim_int.h"
 
+#if defined(LINUX)
+#include <linux/version.h>
+#endif
+
+#if defined(LINUX) && LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
+#error This module is not supported by MDIS for Kernel version 6.1 and above.
+#else // LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
 #ifndef BIT
 #define BIT(x) (1 << (x))
 #endif	/* BIT */
@@ -232,3 +239,4 @@ int32 __DMA_Transfer(LL_HANDLE *h)
 error:
 	return 1;
 }
+#endif // LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
